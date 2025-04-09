@@ -1,0 +1,45 @@
+.messageList {
+    display: flex;
+    flex-direction: column;
+    /*padding: 10px;*/
+    overflow-y: auto;
+    flex-grow: 1;
+    background: #E6E6E6;
+    margin-top: 70px; /* Чтобы верхний элемент (название чата) не перекрывал сообщения (во время прокрутки из-за .messageListAllWindow и полупрозрачности, сообщения будет видно под инпутом)*/
+    margin-bottom: 60px; /* Чтобы нижний элемент (поле ввода чата) не перекрывал сообщения (во время прокрутки из-за .messageListAllWindow и полупрозрачности, сообщения будет видно под инпутом)*/
+
+    width: 100%;       /* Автоматическая ширина */
+
+    
+  }
+
+  .EmptyChatList{
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    line-height: 39px;
+    color: hsl(0, 0%, 40%);
+    width: 100%;
+    text-align: center;
+    padding-top: 40%;
+  }
+
+  .messageListAllWindow{
+    margin-top: -72px; /* Поднятие вверх (элемент заходит под хедер окна сообщений) */
+    margin-bottom: -60px; /* Опускание вниз (элемент заходит под инпут окна сообщений) */
+  }
+  
+  /* Добавьте стили для прокрутки */
+  /*
+  .messageList::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .messageList::-webkit-scrollbar-track {
+    background: #E6E6E6; 
+  }
+  
+  .messageList::-webkit-scrollbar-thumb {
+    background: #E6E6E6; 
+    border-radius: 2px;
+  }
+    */

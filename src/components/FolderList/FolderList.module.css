@@ -1,0 +1,75 @@
+.folderList {
+    margin-top: 0px;
+    background: #e6e6e6;
+  }
+  
+  .folderItem {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 87px;
+    height: fit-content;
+
+    padding-top: 0px;
+    padding-right: 6px;
+    padding-bottom: 16px;
+    padding-left: 6px;
+    margin: 0px 0;
+    cursor: pointer;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+  }
+
+  .folderItem:hover {
+    transform: translateX(4px);
+  }
+
+  .folder_icon{
+    margin-top: 0px;
+    color: #D9D9D9;
+    min-width: 70px; /* 64px */
+    min-height: 57px; /* 51px */
+    position: relative;
+    top: -12px;
+  }
+
+  .full_name{
+    
+    align-items: center; /* Выравниваем по вертикали */
+    margin-top: -10px;
+    max-width: 100%;
+
+
+  }
+
+  .name{
+    color: #000000;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 300;
+  }
+  
+  .name_icon {
+    margin-right: 2px;
+    font-size: 13px;
+  }
+  
+  .count {
+    color: #fff;
+    position: relative;
+    top: 12px;
+    left: -22px;
+    margin-left: auto;
+    background: #5197FF; /*#E23737*/
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    z-index: 5;
+  }
+
+  .count_invisible{
+    background: #00000000;
+    color: #00000000;
+  }

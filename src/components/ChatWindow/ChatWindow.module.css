@@ -1,0 +1,16 @@
+.chatWindow {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    /*заставляет средний блок занимать всё доступное пространство, оставшееся после того, как левый и правый блоки займут свою ширину.*/
+    flex: 2;/*Средний блок (flex: 2) займет 2 части суммы всех flex*/
+    min-width: 400px;  /* Минимальная ширина */
+    max-width: 1400px;  /* Максимальная ширина */
+    
+    /*border-left: 2px solid #eee;
+    border-right: 2px solid #eee;*/
+    /*padding-left: 2px;
+    padding-right: 2px;*/
+    background-color: #E6E6E6;
+
+  }

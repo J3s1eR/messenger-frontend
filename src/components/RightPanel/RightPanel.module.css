@@ -1,0 +1,209 @@
+/* Общая структура */
+
+
+
+.contactFrame {
+  --FileGrid-fade-height: 34px; /*размер фейда снизу и сверху для секции файлов*/
+  --FileGrid-fade-pattern-top: linear-gradient(to top, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255, 1) 90%); /*Паттерн фейда сверху для секции файлов*/
+  --FileGrid-fade-pattern-bottom: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255, 1) 90%); /*Паттерн фейда снизу для секции файлов*/
+  
+
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;/*правый блок (flex: 1) займет 1 часть суммы всех flex*/
+  padding: 0px;
+  /*gap: 32px;*/ /*из-за скроллбара теперь в другом месте (.aboutPerson padding-bottom)*/
+  min-width: 440px;
+  width: auto;
+  height: 100%;
+  background: #ffffff;
+}
+
+.aboutPerson {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px;
+  padding-bottom: 32px;
+  gap: 32px;
+  /*width: 100%;*/
+  height: auto;
+}
+
+/* Блок информации о пользователе */
+.person {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 0px;
+  gap: -4px;
+  width: 100%;
+  min-height: 132px;
+  height: 100%;
+}
+
+.avatar {
+  position: relative;
+  width: 128px;
+  height: 128px;
+}
+
+.avatar img {
+  width: 128px;
+  height: 128px;
+  border-radius: 40px;
+}
+
+.statusIndicator {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  bottom: -108px;
+  right: 20px;
+  background: #00ee09;
+  border: 5px solid #ffffff;
+  border-radius: 50%;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.userName {
+  font-family: 'Inter', sans-serif;
+  font-size: 32px;
+  line-height: 39px;
+  color: #1a1a1a;
+  width: 100%;
+  text-align: left;
+}
+
+.userDepartment {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  line-height: 22px;
+  color: #1a1a1a;
+  width: 100%;
+  text-align: left;
+}
+
+/* Дополнительная информация */
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.section_header {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  line-height: 22px;
+  color: #1a1a1a;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #000000;
+  align-items: flex-start;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.detailLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  line-height: 15px;
+  color: #404040;
+}
+
+/* Файлы */
+.filesSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  margin-bottom: 16px;
+  gap: 0px;/*из-за фейда не нужнен отступ в 16px*/
+  width: 263px;
+  flex: 1;
+  
+}
+
+
+
+.fileGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  overflow-y: auto;
+  max-height: 420px;
+  flex: 1;
+  z-index: 1;
+  padding-top: var(--FileGrid-fade-height);/*высота фейда (когда мы пролистаем до начала, фейд не будет виден)*/
+  padding-bottom: var(--FileGrid-fade-height);/*высота фейда (когда мы пролистаем до конца, фейд не будет виден)*/
+  /* Маска для плавного фейда *//*новый способ*/
+  /*-webkit-mask-image: linear-gradient(to bottom, rgb(0, 0, 0, 1) 95%, rgba(255, 255, 255, 0) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 95%, rgba(255, 255, 255, 0) 100%);
+  */
+}
+
+/* Маска для плавного фейда *//*старый способ*/
+/*.fileGrid::after{
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; /* Высота эффекта (можно регулировать через проценты в градиенте)*/
+  /*background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 95%, rgb(255, 255, 255, 1) 100%);
+  pointer-events: none; /* Чтобы не мешал прокрутке */
+/*}*/
+
+.fileGridFadeTop{
+  position: relative;
+  background: var(--FileGrid-fade-pattern-top);
+  width: 100%;
+  height: var(--FileGrid-fade-height);/*Высота фейда*/
+  margin-bottom: calc(0px - var(--FileGrid-fade-height));/*на это же значение (высоты) элемент должен заходить на следующий блок с файлами*/
+  z-index: 2;/*фейд находиться над файлами*/
+  pointer-events: none; /* Чтобы не мешал прокрутке */
+}
+
+.fileGridFadeBottom{
+  position: relative;
+  background: var(--FileGrid-fade-pattern-bottom);
+  width: 100%;
+  height: var(--FileGrid-fade-height);/*Высота фейда*/
+  margin-top: calc(0px - var(--FileGrid-fade-height));/*на это же значение (высоты) элемент должен заходить на предыдущий блок с файлами*/
+  z-index: 2;/*фейд находиться над файлами*/
+  pointer-events: none; /* Чтобы не мешал прокрутке */
+}
+
+.fileItem {
+  
+  background: lightblue; /* Для проверки */
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.fileItem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

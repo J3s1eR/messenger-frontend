@@ -1,0 +1,15 @@
+services:
+  application:
+    build: # Строим образ из текущей директории
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40500:40500"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      #- ./node_modules:/app/node_modules (не нужно монтировать, так как внутри контейнера создается своя папка зависимостей.)
+    environment: # Устанавливаем переменные окружения
+      - NODE_ENV=production #- NODE_ENV=development или - NODE_ENV=production
+    #command: ["pnpm", "dev"] #в Dockerfile уже указан CMD с нужными параметрами запуска
+    restart: unless-stopped # Автоматический перезапуск контейнера при сбое

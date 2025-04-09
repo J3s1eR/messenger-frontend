@@ -1,0 +1,75 @@
+.inputContainer {
+    /*padding: 8px 16px;*/
+    background: #ffffff;
+    /*border-top: 1px solid #ce3a3a;*/
+    position: relative;
+    bottom: 0px;
+    z-index: 10;
+
+    margin-right: 8px;/*оставляем место для скроллбара*/
+
+
+
+    /*ТЕСТ*/
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.85);
+  }
+  
+  .inputWrapper {
+    background: #ffffff;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    /*ТЕСТ*/
+
+    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.85);
+  }
+  
+  .input {
+    font-family: 'Inter', sans-serif;
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    outline: none;
+    padding: 4px 0;
+    color: #000000;
+  }
+
+  .input::placeholder{
+    color: #818181;
+    opacity: 1;
+    font-size: 18px;
+  }
+  
+  .emojiBtn, .attachmentBtn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    /*padding: 4px;*/
+    color: #1A1A1A;
+  }
+  
+  .sendBtn {
+    background: #38da1f00;
+    border: none;
+    color: #000000;
+    padding: 2px 8px;
+    margin: 0px 0px;
+    /*border-radius: 16px;*/
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 30px;
+  }
+  
+  .sendBtn:hover {
+    background: #39da1f;
+    color: #ffffff;
+  }

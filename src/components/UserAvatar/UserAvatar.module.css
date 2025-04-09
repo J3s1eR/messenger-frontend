@@ -1,0 +1,18 @@
+.avatarContainer {
+    display: flex;
+    /*width: 100%;*/
+    border: 0px solid red; /* Для визуализации контейнера */
+    background: rgba(255, 0, 0, 0); /* Для отображения Squircle */
+    /*padding: 16px;*/
+    
+  }
+  
+  .avatar {
+    /*width: 64px;
+    height: 64px;
+    margin-left: 0px;*/
+    
+    object-fit: cover;
+    display: flex;
+    background: lightblue; /* Для отображения Squircle */
+  }

@@ -1,0 +1,41 @@
+.scrollContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .content {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 8px; /* Отступ для контента */
+  }
+  
+  .scrollbarTrack {
+    position: absolute;
+    top: 0;
+    right: 2px; /* Отступ от правого края */
+    width: 4px; /* Ширина трека */
+    height: 100%;
+    background: rgba(0, 0, 0, 0); /* Фон трека */
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-start; /* Выравнивание бегунка по верху */
+  }
+  
+  .scrollbarThumb {
+    position: absolute;
+    width: 100%;
+    background: #B3B3B3; /* Цвет заливки #007bff */
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    min-height: 30px; /* Минимальная высота бегунка */
+    max-height: 100%; /* Ограничение высоты */
+    transform-origin: top; /* Корректировка точки трансформации */
+  }
+  
+  .scrollbarThumb:hover {
+    background: #9c9c9c; /* Темнеет при наведении #0056b3*/ 
+  }

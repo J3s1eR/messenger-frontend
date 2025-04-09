@@ -1,0 +1,40 @@
+.layout {
+    display: flex;
+    flex-direction: row;
+    /* grid-template-columns: 280px 1fr 320px; */
+    height: 100vh;
+    background: #f5f5f5;
+    /* Прижимает к левому краю */
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%; /* Растягивается на всю ширину */
+    
+  }
+
+.Sidebar_style{
+  padding-right: 66px;
+}
+
+.ChatWindowEmpty{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: #e6e6e6;
+  flex: 2;/*Средний блок (flex: 2) займет 2 части суммы всех flex*/
+
+  /*включить если справа есть какой-то блок, когда не выбран ни один чат*/
+  /*min-width: 400px;   Минимальная ширина */
+  /*max-width: 1400px;   Максимальная ширина */
+}
+
+.ChatWindowEmpty p{
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  line-height: 39px;
+  color: hsl(0, 0%, 40%);
+  width: 100%;
+  text-align: center;
+}
