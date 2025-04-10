@@ -10,6 +10,12 @@
     height: 100%;
     overflow-y: auto;
     padding-right: 8px; /* Отступ для контента */
+    scrollbar-width: none; /* Скрываем нативный скроллбар для Firefox */
+    -ms-overflow-style: none; /* Скрываем нативный скроллбар для IE и Edge */
+  }
+  
+  .content::-webkit-scrollbar {
+    display: none; /* Скрываем нативный скроллбар для Chrome, Safari и Opera */
   }
   
   .scrollbarTrack {
@@ -17,11 +23,13 @@
     top: 0;
     right: 2px; /* Отступ от правого края */
     width: 4px; /* Ширина трека */
-    height: 100%;
-    background: rgba(0, 0, 0, 0); /* Фон трека */
+    height: 100%; /* Высота трека */
+    background-color: rgba(0, 0, 0, 0.01); /* Фон трека */
     border-radius: 4px;
+    /*
     display: flex;
-    align-items: flex-start; /* Выравнивание бегунка по верху */
+    align-items: flex-start; */ /* Выравнивание бегунка по верху */
+    z-index: 10000; /* Убеждаемся, что скроллбар всегда сверху */
   }
   
   .scrollbarThumb {
@@ -30,12 +38,11 @@
     background: #B3B3B3; /* Цвет заливки #007bff */
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    min-height: 30px; /* Минимальная высота бегунка */
-    max-height: 100%; /* Ограничение высоты */
-    transform-origin: top; /* Корректировка точки трансформации */
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
   }
   
   .scrollbarThumb:hover {
-    background: #9c9c9c; /* Темнеет при наведении #0056b3*/ 
+    opacity: 1; /* Непрозрачность при наведении */
+    background-color: #a5a5a5; /* Цвет при наведении #9c9c9c  #0056b3*/
   }
