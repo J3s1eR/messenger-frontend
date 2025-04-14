@@ -2,6 +2,11 @@ import { Client, IMessage, Stomp } from '@stomp/stompjs';
 //import SockJS from 'sockjs-client';
 import { apiService } from '../api/apiService';
 
+import { WS_URL } from '../../config/apiConfig.private';
+
+// Использовать URL из конфигурационного файла
+// const WS_URL = 'ws://localhost:8080/ws';
+
 type Callback = (message: any) => void;
 
 class WebSocketService {
@@ -32,7 +37,8 @@ class WebSocketService {
       return;
     }
 
-    ***REMOVED***
+    // Используем URL из конфигурации
+    const socket = new WebSocket(WS_URL);
     this.client = Stomp.over(socket);
     this.client.connectHeaders = {
       Authorization: `Bearer ${token}`,

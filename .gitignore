@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Локальные (private) конфигурации
+src/config/apiConfig.private.ts

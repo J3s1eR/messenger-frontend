@@ -1,6 +1,3 @@
-
-
-
 # Backend
 
 https://github.com/sev4ikwasd/messenger-backend/tree/dev#
@@ -60,4 +57,29 @@ export default tseslint.config({
     ...reactDom.configs.recommended.rules,
   },
 })
+```
+
+# Messenger Frontend
+
+## Настройка конфигурации
+
+Для работы с API и WebSocket серверами необходимо настроить конфигурацию:
+
+1. Перейдите в каталог `src/config`
+2. Скопируйте файл `apiConfig.ts` с именем `apiConfig.private.ts` с указанием ваших локальных настроек
+
+
+**Файл `apiConfig.private.ts` не должен добавляться в Git!**
+
+## Запуск проекта
+
+```bash
+npm install
+npm run dev
+```
+
+```bash
+npm install -g pnpm
+pnpm install
+pnpm run dev
 ```

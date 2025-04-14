@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { API_URL } from '../../config/apiConfig.private';
 
-***REMOVED***
+// Использовать URL из конфигурационного файла
+// const API_URL = 'http://localhost:8080';
 
 // Хранилище токена
 let token: string | null = null;
@@ -42,6 +44,4 @@ export const apiService = {
   getUserKeys: async () => {
     return axios.get(`${API_URL}/user/keys`, { headers: getAuthHeaders() });
   }
-
-
 };

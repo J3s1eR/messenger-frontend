@@ -213,7 +213,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!uid){
       return [];
     }
-    const res_new = await apiService.get(`/message/user/${uid}/new/?page=0&size=100`);
+    //const res_new = await apiService.get(`/message/user/${uid}/new/?page=0&size=100`);
     const res_old = await apiService.get(`/message/user/${uid}/old/?page=0&size=100`);
     //return res.data;
     //setMessages(res.data.content);
