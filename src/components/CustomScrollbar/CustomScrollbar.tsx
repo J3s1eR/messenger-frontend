@@ -83,8 +83,9 @@ export const CustomScrollbar = ({ children, className }: CustomScrollbarProps) =
       // Смещение указателя мыши
       const deltaY = moveEvent.clientY - startY;
       
-      // Коэффициент прокрутки - соотношение смещения мыши к смещению прокрутки
-      const scrollRatio = deltaY / clientHeight;
+      // Используем более чувствительный коэффициент прокрутки
+      // Вместо clientHeight используем меньшее значение для увеличения скорости прокрутки
+      const scrollRatio = deltaY / (clientHeight * 0.5);
       
       // Расчет новой позиции прокрутки
       const newScrollTop = startScrollTop + (scrollRatio * maxScroll);
@@ -113,8 +114,14 @@ export const CustomScrollbar = ({ children, className }: CustomScrollbarProps) =
     // Расчет позиции клика относительно трека (от 0 до 1)
     const clickPositionRatio = (e.clientY - trackRect.top) / trackRect.height;
     
-    // Преобразование позиции клика в позицию прокрутки с учетом высоты бегунка
-    container.scrollTop = clickPositionRatio * (scrollHeight - clientHeight);
+    // Преобразование позиции клика в позицию прокрутки
+    // Учитываем высоту бегунка при расчете для более точного позиционирования
+    const effectiveHeight = thumbHeight / 100;
+    const adjustedRatio = Math.max(0, Math.min(1, 
+      clickPositionRatio - effectiveHeight/2) / (1 - effectiveHeight)
+    );
+    
+    container.scrollTop = adjustedRatio * (scrollHeight - clientHeight);
   };
 
   return (
