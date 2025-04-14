@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { webSocketService } from '../services/ws/WebSocketService';
 import { apiService } from '../services/api/apiService';
 
 import { v4 as uuidv4 } from 'uuid';
 
 import { useAuth } from './AuthContext';
+
+import { debounce } from 'lodash';
 
 interface Message {
   //receiverUid: string;
@@ -36,6 +38,7 @@ interface MessageContextType {
   setActiveChatUid: (uid: string | null) => void;  // Функция для обновления активного чата
   users: User[];//список пользователей
   ActiveChatUser: User | null;//собеседник
+  isLoading: boolean; // Состояние загрузки
 }
 
 const ChatMessageContext = createContext<MessageContextType | undefined>(undefined);
@@ -48,13 +51,8 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [notifications, setNotifications] = useState<any[]>([]);
   const [users, setUsers] = useState<User[]>([]);  // состояние для пользователей
   const [activeChatUid, setActiveChatUid] = useState<string | null>(null);  // Состояние для активного чата
-  const [ActiveChatUser, setActiveChatUser] = useState<User | null>({
-    uid: '',
-    name: '',
-    isRegistered: false
-  });
-
-
+  const [ActiveChatUser, setActiveChatUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Новое состояние для отслеживания загрузки
 
   useEffect(() => {
     if (!user) return;
@@ -62,8 +60,16 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     webSocketService.disconnect();
   
     webSocketService.connect(
-      (notif) => setNotifications((prev) => [...prev, notif]),
+      (notif) => {
+        
+        console.log("NEW NOTIFICATION\nnotif:\n", notif)
+        setNotifications((prev) => [...prev, notif])
+        if (activeChatUid && notif.sender === activeChatUid) {
+          fetchMessagesforChat(activeChatUid);
+        }
+      },
       (msg) => {
+        console.log("NEW MESSAGE\nmsg:\n", msg)
         // Декодируем сообщение
         const decodedMsg: Message = {
           sender: msg.sender,
@@ -72,10 +78,13 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
           //groupOu: msg.groupOu,
           //timestamp: msg.timestamp,
         };
-  
+        
+        console.log("NEW MESSAGE\ndecodedMsg:\n", decodedMsg)
+        
         // Если это сообщение от активного чата — добавляем в текущие сообщения
         if (activeChatUid && decodedMsg.sender === activeChatUid) {
           setMessages((prev) => [...prev, decodedMsg]);
+
 
         } //else {
           // Иначе это сообщение не из активного чата, добавим как уведомление
@@ -98,13 +107,35 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     if(activeChatUid){
       setMessages([]); // очистка старых сообщений
+      setIsLoading(true); // устанавливаем состояние загрузки
       console.log("Чат uid:", activeChatUid);
+      
       Promise.all([
         fetchUserInfoByUid(activeChatUid),
-        fetchMessagesforChat(activeChatUid),
-      ]);
+        //fetchMessagesforChat(activeChatUid),
+        debouncedFetchMessagesforChat(activeChatUid),
+      ])
+      .then(() => {
+        setIsLoading(false); // снимаем состояние загрузки после завершения всех запросов
+      })
+      .catch((error: any) => {
+        if (error.response?.status === 400 && error.response.data.message === "Message already received") {
+          console.log('Ошибка при загрузке новых сообщений чата: Сообщение уже получено');
+        } else {
+          console.error(`Ошибка при загрузке данных чата ${activeChatUid}:`, error);
+        }
+        setIsLoading(false); // снимаем состояние загрузки в случае ошибки
+      });
     }
   }, [activeChatUid]);
+
+
+  const debouncedFetchMessagesforChat = useRef(
+    debounce((uid: string | null) => {
+      fetchMessagesforChat(uid); // <-- вызывается, но с задержкой
+    }, 1000)
+  ).current;
+  
 
   const sendMessage = (receiverUid: string, msg: string) => {
     if (!user || !webSocketService.isconnected()) return;
@@ -140,6 +171,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const fetchUsers = async () => {
+    if(users.length > 0) return users;//временное решение
     if (!user) return;
     const res = await apiService.get('/user');
     const registeredUsers = res.data.content.filter((user: { isRegistered: boolean }) => user.isRegistered);//список зарегестрированных пользователей
@@ -150,16 +182,23 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const fetchUserInfoByUid = async (uid: string | null) => {
     if (!user || !webSocketService.isconnected()) return [];
     if(!uid){
+      setActiveChatUser(null);
       return [];
     }
-    const res = await apiService.get(`/user/${uid}`);
-    const data = res.data;
-    setActiveChatUser({// Обновляем состояние Собеседника
-      uid: data.uid,
-      name: data.name,
-      isRegistered: data.isRegistered,
-    });
-    //return [data];
+    try {
+      const res = await apiService.get(`/user/${uid}`);
+      const data = res.data;
+      setActiveChatUser({// Обновляем состояние Собеседника
+        uid: data.uid,
+        name: data.name,
+        isRegistered: data.isRegistered,
+      });
+      return data;
+    } catch (error) {
+      console.error(`Ошибка при получении информации о пользователе ${uid}:`, error);
+      setActiveChatUser(null);
+      return [];
+    }
   };
   
 
@@ -174,10 +213,11 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!uid){
       return [];
     }
-    const res = await apiService.get(`/message/user/${uid}/old/?page=0&size=100`);
+    const res_new = await apiService.get(`/message/user/${uid}/new/?page=0&size=100`);
+    const res_old = await apiService.get(`/message/user/${uid}/old/?page=0&size=100`);
     //return res.data;
     //setMessages(res.data.content);
-    const data = res.data.content;
+    const data = res_old.data.content;
     
     // Преобразуем каждый message из Base64 в строку
     const decodedMessages = data.map((message: { message: string }) => ({
@@ -186,7 +226,8 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }));
     setMessages(decodedMessages.reverse());
     //return res.data.content; // Получаем только массив сообщений
-  };
+
+  };// Задержка в 1000ms
 
   const fetchMessagesForGroup = async (ou: string | null) => {
     if (!user || !webSocketService.isconnected()) return [];
@@ -214,6 +255,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
         activeChatUid,  // Добавление activeChatUid в контекст
         setActiveChatUid,  // Функция для обновления activeChatUid
         ActiveChatUser,
+        isLoading, // Добавляем состояние загрузки в контекст
         }}>
       {children}
     </ChatMessageContext.Provider>

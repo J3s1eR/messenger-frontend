@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MessageBubble } from '../MessageBubble/MessageBubble';
 import styles from './MessageList.module.css';
 
@@ -176,15 +176,42 @@ type MessageListProps = {
 
 //export const MessageList = ({ messages }: MessageListProps) => {
 export const MessageList = () => {
-  const {messages} = useChatMessages();
+  const {messages, isLoading} = useChatMessages();
   const {getMyUid} = useAuth();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [userScrolled, setUserScrolled] = useState(false);
+  const prevMessagesLength = useRef(0);
+
+  // Отслеживаем прокрутку пользователем
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100; // в пределах 100px от нижней границы
+    
+    setUserScrolled(!isAtBottom);
+  };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+     // Прокручивать вниз только если:
+    // 1. Количество сообщений увеличилось (пришло новое сообщение)
+    // 2. ИЛИ это первоначальная загрузка сообщений (из пустого массива)
+    // 3. И пользователь не прокручивал вверх вручную
+    if ((messages.length > prevMessagesLength.current || prevMessagesLength.current === 0) && !userScrolled) {
+      messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    }
+    
+    prevMessagesLength.current = messages.length;
+  }, [messages, userScrolled]);
+
+  // Кнопка для прокрутки вниз
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    setUserScrolled(false);
+  };
 
   return (
     
@@ -192,7 +219,8 @@ export const MessageList = () => {
     <CustomScrollbar className={styles.messageListAllWindow}>
       <div className={styles.messageList}>
       
-      {messages.length === 0 && <div className={styles.EmptyChatList}>Сообщений нет</div>}
+      {isLoading ? <div className={styles.EmptyChatList}>Загрузка...</div> : messages.length === 0 && <div className={styles.EmptyChatList}>Сообщений нет</div>}
+
     
       {messages.map(message => (
         <MessageBubble 
@@ -207,10 +235,38 @@ export const MessageList = () => {
         />
       ))}
       
-      <div ref={messagesEndRef} />
+      <div ref={messagesEndRef} style={{ height: '1px', margin: '0' }} />
       
     
     </div>
+
+    {userScrolled && messages.length > 0 && (
+      <button 
+        type="button"
+        onClick={scrollToBottom} 
+        className={styles.scrollToBottomButton}
+        style={{
+          position: 'absolute', 
+          bottom: '20px', 
+          right: '20px',
+          zIndex: 10,
+          padding: '10px',
+          borderRadius: '50%',
+          backgroundColor: '#007bff',
+          color: 'white',
+          border: 'none',
+          cursor: 'pointer',
+          width: '40px',
+          height: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        ↓
+      </button>
+    )}
+
     </CustomScrollbar>
 
     

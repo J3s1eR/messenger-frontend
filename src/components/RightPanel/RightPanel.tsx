@@ -5,6 +5,8 @@ import styles from './RightPanel.module.css';
 import { CustomScrollbar } from '../CustomScrollbar/CustomScrollbar';
 import { useChatMessages } from '../../contexts/ChatMessagesContext';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 // Пример данных
 const userDetails = {
   name: 'John Pork',//'Константинова-Красильникова Капитолина Константиновна'
@@ -21,7 +23,8 @@ const files = Array.from({ length: 60 }, (_, i) => ({
 }));
 
 export const RightPanel = () => {
-  const {ActiveChatUser} = useChatMessages();
+  const {getMyUid} = useAuth();
+  const {ActiveChatUser, isLoading} = useChatMessages();
   // Вычисляем стиль с использованием пропсов
   //const FileItemStyle = {
   //  width: `${80}px`,
@@ -51,7 +54,9 @@ export const RightPanel = () => {
            */}
           <div className={styles.userInfo}>
             {/*<div className={styles.userName}>{userDetails.name}</div>*/}
-            <div className={styles.userName}>{ActiveChatUser.name}</div>
+            <div className={styles.userName}>
+              {isLoading ? 'Загрузка...' : ActiveChatUser?.uid === getMyUid() ? 'Избранное' : ActiveChatUser?.name}
+              </div>
             <div className={styles.userDepartment}>{userDetails.department}</div>
           </div>
         </div>

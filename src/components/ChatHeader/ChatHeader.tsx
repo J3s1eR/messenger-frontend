@@ -6,12 +6,14 @@ import SearchIcon from "../../assets/Search_Icon_react.svg";
 
 import { useChatMessages } from '../../contexts/ChatMessagesContext';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 export const ChatHeader = () => {
   const ChatHeaderRef = useRef<HTMLDivElement>(null);
   const [ChatHeaderSize, setChatHeaderSize] = useState({ width: 0, height: 0 });
 			  
-  const {ActiveChatUser} = useChatMessages();
-  
+  const {ActiveChatUser, isLoading} = useChatMessages();
+  const {getMyUid} = useAuth();
 					 
 		  
 																	
@@ -63,7 +65,9 @@ export const ChatHeader = () => {
         {/*<img src="../../assets/dog.png" alt="Contact" className={styles.avatar}/>*/}
       
       <div className={styles.info}>
-        <div>{ActiveChatUser.name}</div>
+        <div>
+        {isLoading ? 'Загрузка...' : ActiveChatUser?.uid === getMyUid() ? 'Избранное' : ActiveChatUser?.name}
+          </div>
         <span className={styles.status}>Online</span>
       </div>
       <div className={styles.actions}>

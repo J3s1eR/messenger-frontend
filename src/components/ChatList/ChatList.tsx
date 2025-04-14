@@ -7,6 +7,8 @@ import { CustomScrollbar } from '../CustomScrollbar/CustomScrollbar';
 
 import { useChatMessages } from '../../contexts/ChatMessagesContext'; // Импортируем useMessages
 
+import { useAuth } from '../../contexts/AuthContext';
+
 /*
 const chats = [
   {
@@ -133,8 +135,9 @@ interface ChatListProps {
 //export const ChatList = ({activeChatUid, setActiveChatUid, chats}: ChatListProps) => {
 export const ChatList = () => {
   const {activeChatUid, setActiveChatUid} = useChatMessages();
+  const {getMyUid} = useAuth();
 
-  const { fetchChats, users, fetchUsers, notifications } = useChatMessages();
+  const { fetchChats, users, fetchUsers, notifications, isLoading} = useChatMessages();
   const [chats, setChats] = useState<any[]>([]);
 
   useEffect(() => {
@@ -172,6 +175,7 @@ export const ChatList = () => {
     <CustomScrollbar>
     <div className={styles.chatList}>
 
+    {/*кнопка для создания нового диалога*/} 
     <Squircle
         className={styles.NewchatWithUser} 
         cornerRadius={16}
@@ -207,6 +211,7 @@ export const ChatList = () => {
           </div>
         </Squircle>
 
+      {/*список пользователей для создания нового диалога*/}
       {users.map(user =>
         <Squircle
         className={styles.NewchatWithUserItem} 
@@ -239,7 +244,7 @@ export const ChatList = () => {
             {/* Основное содержимое */}
             <div className={styles.content}>
               <div className={styles.name}>
-                {user.name}
+                {isLoading ? 'Загрузка...' : user.uid === getMyUid() ? 'Избранное' : user.name}
               </div>
             
               <div className={styles.message}>
@@ -250,16 +255,17 @@ export const ChatList = () => {
         </Squircle>
       )}
 
+      {/*список существующих чатов*/}
       {Array.isArray(chats) && chats.length > 0 ? (
         chats.map(chat => (
         
         <Squircle
           //key={chat.id}
-          key={chat.Uid}
+          key={chat.id}
           
           //className={`${styles.chatItem} ${chat.unread > 0 ? styles.unread : ''} ${openedChatId === chat.id ? styles.openedChat : ''}`}
           //className={`${styles.chatItem} ${chat.unread > 0 ? styles.unread : ''} ${activeChatId === chat.id ? styles.openedChat : ''}`}
-          className={`${styles.chatItem} ${chat.unread > 0 ? styles.unread : ''} ${activeChatUid === chat.Uid ? styles.openedChat : ''}`}
+          className={`${styles.chatItem} ${chat.unread > 0 ? styles.unread : ''} ${activeChatUid === chat.id ? styles.openedChat : ''}`}
           
           //cornerRadius={12}
 
@@ -274,9 +280,9 @@ export const ChatList = () => {
 
           onClick={() => {
             //toggleChat(chat.id); 
-            toggleChat(chat.Uid); 
+            toggleChat(chat.id); 
             //setActiveChatId(chat.id)
-            console.log(`Open chat ${chat.Uid}`)
+            console.log(`Open chat ${chat.id}`)
           }}
           //onClick={() => toggleChat(chat.id);} // Переключение состояния
         >
@@ -311,7 +317,7 @@ export const ChatList = () => {
             {/* Основное содержимое */}
             <div className={styles.content}>
               <div className={styles.name}>
-                {chat.name}
+                {isLoading ? 'Загрузка...' : chat.id === getMyUid() ? 'Избранное' : chat.name}
               </div>
             
               <div className={styles.message}>

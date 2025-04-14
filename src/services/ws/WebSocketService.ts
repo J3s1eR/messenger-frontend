@@ -7,9 +7,24 @@ type Callback = (message: any) => void;
 class WebSocketService {
   private client: Client | null = null;
   private isConnected = false;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectTimer: number | null = null;
+  private onNotificationCallback: Callback | null = null;
+  private onMessageReceivedCallback: Callback | null = null;
 
   connect(onNotification: Callback, onMessageReceived: Callback) {
-    if (this.client || this.isConnected) return;
+    // Сохраняем колбэки
+    this.onNotificationCallback = onNotification;
+    this.onMessageReceivedCallback = onMessageReceived;
+    
+    // Если уже подключены, не создаем новое соединение
+    if (this.client && this.isConnected) return;
+    
+    // Если уже есть активная попытка подключения, прерываем ее
+    if (this.client) {
+      this.disconnect();
+    }
 
     const token = apiService.getToken();
     if (!token) {
@@ -25,17 +40,19 @@ class WebSocketService {
 
     this.client.onConnect = () => {
       this.isConnected = true;
+      this.reconnectAttempts = 0; // Сбрасываем счетчик попыток
       console.log('[WS] Connected');
 
-      // Сохраняем информацию о подключении
-      //localStorage.setItem('websocket-connected', 'true');
-
-      this.client?.subscribe('/queue/notification', (msg: IMessage) => {
-        onNotification(JSON.parse(msg.body));
+      this.client?.subscribe('/user/queue/notification', (msg: IMessage) => {
+        if (this.onNotificationCallback) {
+          this.onNotificationCallback(JSON.parse(msg.body));
+        }
       });
 
-      this.client?.subscribe('/queue/recieved', (msg: IMessage) => {
-        onMessageReceived(JSON.parse(msg.body));
+      this.client?.subscribe('/user/queue/received', (msg: IMessage) => {
+        if (this.onMessageReceivedCallback) {
+          this.onMessageReceivedCallback(JSON.parse(msg.body));
+        }
       });
     };
 
@@ -46,22 +63,36 @@ class WebSocketService {
     this.client.activate();
 
     this.client.onWebSocketClose = () => {
-        console.warn('[WS] Соединение закрыто, повторная попытка через 10 сек');
-        this.isConnected = false;
+      console.warn('[WS] Соединение закрыто');
+      this.isConnected = false;
+      
+      // Очищаем предыдущий таймер, если он существует
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+      
+      // Проверяем количество попыток переподключения
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnectAttempts++;
+        const delay = Math.min(30000, 1000 * Math.pow(2, this.reconnectAttempts)); // Экспоненциальная задержка
+        console.log(`[WS] Попытка переподключения ${this.reconnectAttempts}/${this.maxReconnectAttempts} через ${delay/1000} сек`);
+        
+        this.reconnectTimer = setTimeout(() => {
+          if (this.onNotificationCallback && this.onMessageReceivedCallback) {
+            this.connect(this.onNotificationCallback, this.onMessageReceivedCallback);
+          }
+        }, delay);
+      } else {
+        console.warn('[WS] Достигнуто максимальное количество попыток переподключения');
         this.client = null;
-        //localStorage.removeItem('websocket-connected');
-        setTimeout(() => this.connect(onNotification, onMessageReceived), 10000);
-      };
+      }
+    };
   }
 
-  reconnectIfNeeded() {
-    if (localStorage.getItem('websocket-connected') === 'true' && apiService.getMyUid()) {
-      // Пытаемся снова подключиться
-      this.connect(() => {}, () => {});
-    }
+  isconnected() {
+    return this.isConnected;
   }
-
-  isconnected(){return this.isConnected}
 
   sendMessage(message: object) {
     if (!this.client || !this.isConnected) {
@@ -76,10 +107,23 @@ class WebSocketService {
   }
 
   disconnect() {
-    this.client?.deactivate();
+    // Очищаем таймер переподключения, если он существует
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    
+    if (this.client) {
+      try {
+        this.client.deactivate();
+      } catch (e) {
+        console.error('[WS] Ошибка при отключении', e);
+      }
+    }
+    
     this.isConnected = false;
     this.client = null;
-    //localStorage.removeItem('websocket-connected');
+    this.reconnectAttempts = 0;
   }
 }
 
