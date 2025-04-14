@@ -3,9 +3,9 @@
 
 
 .contactFrame {
-  --FileGrid-fade-height: 34px; /*размер фейда снизу и сверху для секции файлов*/
-  --FileGrid-fade-pattern-top: linear-gradient(to top, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255, 1) 90%); /*Паттерн фейда сверху для секции файлов*/
-  --FileGrid-fade-pattern-bottom: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255, 1) 90%); /*Паттерн фейда снизу для секции файлов*/
+  --FileGrid-fade-height: 68px; /*размер фейда снизу и сверху для секции файлов*/
+  --FileGrid-fade-pattern-top: linear-gradient(to top, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255, 1) 95%); /*Паттерн фейда сверху для секции файлов*/
+  --FileGrid-fade-pattern-bottom: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255, 1) 95%); /*Паттерн фейда снизу для секции файлов*/
   
 
 
@@ -139,28 +139,30 @@
   padding-top: 0px;
   padding-bottom: 0px;
   margin-bottom: 16px;
-  gap: 0px;/*из-за фейда не нужнен отступ в 16px*/
-  width: 263px;
+  gap: 16px;/*из-за фейда не нужнен отступ в 16px*/
+  /*width: 263px;*/
+  width: 90%;/*чтобы скроллбар отображался, и не заезжал за скроллбар целого блока*/
   flex: 1;
   
 }
 
-
+.filesContainer {
+  position: relative;
+  height: 420px;
+  min-height: 420px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0px;/*мешает скроллу (обрезает углы)*/
+  background-color: rgba(255, 255, 255, 0);/*не нужно*/
+}
 
 .fileGrid {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  overflow-y: auto;
-  max-height: 420px;
-  flex: 1;
+  padding: var(--FileGrid-fade-height) 0px; /*раньше нужен был для фейда*/
+  width: 100%;
   z-index: 1;
-  padding-top: var(--FileGrid-fade-height);/*высота фейда (когда мы пролистаем до начала, фейд не будет виден)*/
-  padding-bottom: var(--FileGrid-fade-height);/*высота фейда (когда мы пролистаем до конца, фейд не будет виден)*/
-  /* Маска для плавного фейда *//*новый способ*/
-  /*-webkit-mask-image: linear-gradient(to bottom, rgb(0, 0, 0, 1) 95%, rgba(255, 255, 255, 0) 100%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 95%, rgba(255, 255, 255, 0) 100%);
-  */
 }
 
 /* Маска для плавного фейда *//*старый способ*/
@@ -177,22 +179,42 @@
 
 .fileGridFadeTop{
   position: relative;
+  top: 0;
+  left: 0;
   background: var(--FileGrid-fade-pattern-top);
   width: 100%;
   height: var(--FileGrid-fade-height);/*Высота фейда*/
   margin-bottom: calc(0px - var(--FileGrid-fade-height));/*на это же значение (высоты) элемент должен заходить на следующий блок с файлами*/
   z-index: 2;/*фейд находиться над файлами*/
   pointer-events: none; /* Чтобы не мешал прокрутке */
+  
+  /* Градиент размытия: сильнее сверху, слабее внизу */
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 6%,  rgba(0, 0, 0, 0) 85%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 6%,  rgba(0, 0, 0, 0) 85%);
+  
+  /* Эффект размытия */
+  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px);
 }
 
 .fileGridFadeBottom{
   position: relative;
+  bottom: 0;
+  left: 0;
   background: var(--FileGrid-fade-pattern-bottom);
   width: 100%;
   height: var(--FileGrid-fade-height);/*Высота фейда*/
   margin-top: calc(0px - var(--FileGrid-fade-height));/*на это же значение (высоты) элемент должен заходить на предыдущий блок с файлами*/
   z-index: 2;/*фейд находиться над файлами*/
   pointer-events: none; /* Чтобы не мешал прокрутке */
+  
+  /* Градиент размытия: сильнее снизу, слабее сверху */
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 0) 85%);
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 6%, rgba(0, 0, 0, 0) 85%);
+  
+  /* Эффект размытия */
+  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px);
 }
 
 .fileItem {

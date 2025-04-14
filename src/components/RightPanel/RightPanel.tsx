@@ -87,50 +87,39 @@ export const RightPanel = () => {
 
       {/* Файлы */}
       <div className={styles.filesSection}>
-        <div className={styles.section_header}>Files</div>
-        <CustomScrollbar>
-        <div className={styles.fileGridFadeTop}></div>
-        <div className={styles.fileGrid}>
+        <div className={styles.section_header}>Файлы</div>
+        
+        {/* Контейнер с относительным позиционированием */}
+        <div className={styles.filesContainer}>
+
+          {/* Фейд сверху с эффектом размытия размещены поверх содержимого */}
+          <div className={styles.fileGridFadeTop}></div>
           
-          
-          {/*
-            <div key={file.id} className={styles.fileItem}>
-              <img src={file.url} alt={`File ${file.id}`} />
+          {/* Компонент скроллбара */}
+          <CustomScrollbar style={{ height: '100%', width: '100%' }}>
+            <div className={styles.fileGrid}>
+              {files.map((file) => (
+                <Squircle key={file.id}
+                  className={styles.fileItem}
+                  style={{
+                    width: `${80}px`,
+                    height: `${80}px`,
+                  }}
+                  cornerRadius={14}
+                  cornerSmoothing={1}
+                  defaultWidth={80}
+                  defaultHeight={80}
+                  asChild
+                >
+                  <img src={file.url} alt={`File ${file.id}`} />
+                </Squircle>
+              ))}
             </div>
-             */}
-             {/*onClick={() => setIsOpen(true)}*/}
-          {files.map((file) => (
-            
-
-            <Squircle key={file.id}
-              className={styles.fileItem}
-
-              style={
-                {
-                width: `${80}px`,
-                height: `${80}px`,
-              }
-              }
-
-              cornerRadius={15}
-              cornerSmoothing={1}
-                
-              defaultWidth={80}
-              defaultHeight={80}
-              
-                
-                
-              asChild
-                
-            >
-              <img src={file.url} alt={`File ${file.id}`} />
-                
-            </Squircle>
-            
-          ))}
+          </CustomScrollbar>
+          
+          {/* Фейд снизу с эффектом размытия размещены поверх содержимого */}
+          <div className={styles.fileGridFadeBottom}></div>
         </div>
-        <div className={styles.fileGridFadeBottom}></div>
-        </CustomScrollbar>
       </div>
     </CustomScrollbar>
     </div>

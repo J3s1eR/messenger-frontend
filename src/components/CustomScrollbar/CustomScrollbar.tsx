@@ -1,12 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, CSSProperties } from 'react';
 import styles from './CustomScrollbar.module.css';
 
 type CustomScrollbarProps = {
   children: React.ReactNode;
   className?: string; // Добавляем поддержку className
+  style?: CSSProperties; // Добавляем поддержку стилей
 };
 
-export const CustomScrollbar = ({ children, className }: CustomScrollbarProps) => {
+export const CustomScrollbar = ({ children, className, style }: CustomScrollbarProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollPercent, setScrollPercent] = useState(0);
   const [isScrollbarVisible, setIsScrollbarVisible] = useState(false); // Показывает, нужно ли показывать скроллбар
@@ -125,7 +126,7 @@ export const CustomScrollbar = ({ children, className }: CustomScrollbarProps) =
   };
 
   return (
-    <div className={`${styles.scrollContainer} ${className || ''}`}>
+    <div className={`${styles.scrollContainer} ${className || ''}`} style={style}>
       <div className={styles.content} ref={containerRef}>
         {children}
       </div>
