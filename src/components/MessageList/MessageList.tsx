@@ -201,7 +201,19 @@ export const MessageList = () => {
     // 2. ИЛИ это первоначальная загрузка сообщений (из пустого массива)
     // 3. И пользователь не прокручивал вверх вручную
     if ((messages.length > prevMessagesLength.current || prevMessagesLength.current === 0) && !userScrolled) {
-      messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+      //messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+      // Найдем scrollable контейнер (это .content внутри CustomScrollbar)
+      const scrollContainer = messagesEndRef.current?.parentElement?.parentElement;
+      if (scrollContainer) {
+      // Прокручиваем до конца, но не заходя на поле ввода
+        const targetScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        
+        // Используем smooth behavior
+        scrollContainer.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        });
+      }
     }
     
     prevMessagesLength.current = messages.length;
@@ -209,7 +221,19 @@ export const MessageList = () => {
 
   // Кнопка для прокрутки вниз
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    //messagesEndRef.current?.scrollBy({ top: -60, behavior: 'smooth' });
+    // Найдем scrollable контейнер (это .content внутри CustomScrollbar)
+    const scrollContainer = messagesEndRef.current?.parentElement?.parentElement;
+    if (scrollContainer) {
+      // Прокручиваем до конца, но не заходя на поле ввода
+      const targetScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+      
+      // Используем smooth behavior
+      scrollContainer.scrollTo({
+        top: targetScroll,
+        behavior: 'smooth'
+      });
+    }
     setUserScrolled(false);
   };
 

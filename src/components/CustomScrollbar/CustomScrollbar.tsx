@@ -5,9 +5,10 @@ type CustomScrollbarProps = {
   children: React.ReactNode;
   className?: string; // Добавляем поддержку className
   style?: CSSProperties; // Добавляем поддержку стилей
+  onScroll?: () => void; // Добавляем обработчик прокрутки
 };
 
-export const CustomScrollbar = ({ children, className, style }: CustomScrollbarProps) => {
+export const CustomScrollbar = ({ children, className, style, onScroll }: CustomScrollbarProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollPercent, setScrollPercent] = useState(0);
   const [isScrollbarVisible, setIsScrollbarVisible] = useState(false); // Показывает, нужно ли показывать скроллбар
@@ -34,6 +35,11 @@ export const CustomScrollbar = ({ children, className, style }: CustomScrollbarP
       setScrollPercent(percent);
     } else {
       setScrollPercent(0);
+    }
+
+    // Вызываем внешний обработчик, если он предоставлен
+    if (onScroll) {
+      onScroll();
     }
   };
 
