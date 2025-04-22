@@ -37,12 +37,24 @@ class WebSocketService {
       return;
     }
 
-    // Используем URL из конфигурации
-    const socket = new WebSocket(WS_URL);
-    this.client = Stomp.over(socket);
+    // Создаем фабрику WebSocket для поддержки автоматического переподключения
+    const socketFactory = () => {
+      console.log('[WS] Creating new WebSocket connection');
+      return new WebSocket(WS_URL);
+    };
+    
+    // Используем фабрику вместо прямого создания WebSocket
+    this.client = Stomp.over(socketFactory);
+    
+    // Настраиваем клиент
     this.client.connectHeaders = {
       Authorization: `Bearer ${token}`,
     };
+    
+    // Дополнительные настройки для стабильного соединения
+    this.client.reconnectDelay = 5000; // Задержка переподключения (5 секунд)
+    this.client.heartbeatIncoming = 10000; // Регулярные пинги от сервера (10 секунд)
+    this.client.heartbeatOutgoing = 10000; // Регулярные пинги на сервер (10 секунд)
 
     this.client.onConnect = () => {
       this.isConnected = true;
@@ -51,12 +63,14 @@ class WebSocketService {
 
       this.client?.subscribe('/user/queue/notification', (msg: IMessage) => {
         if (this.onNotificationCallback) {
+          console.log('[WS] Received notification');
           this.onNotificationCallback(JSON.parse(msg.body));
         }
       });
 
       this.client?.subscribe('/user/queue/received', (msg: IMessage) => {
         if (this.onMessageReceivedCallback) {
+          console.log('[WS] Received message');
           this.onMessageReceivedCallback(JSON.parse(msg.body));
         }
       });
@@ -64,6 +78,11 @@ class WebSocketService {
 
     this.client.onStompError = (frame) => {
       console.error('[WS] Ошибка STOMP', frame.headers['message'], frame.body);
+    };
+
+    // Обработка ошибок соединения
+    this.client.onWebSocketError = (event) => {
+      console.error('[WS] WebSocket error:', event);
     };
 
     this.client.activate();
@@ -106,10 +125,15 @@ class WebSocketService {
       return;
     }
 
-    this.client.publish({
-      destination: '/app/send',
-      body: JSON.stringify(message),
-    });
+    try {
+      this.client.publish({
+        destination: '/app/send',
+        body: JSON.stringify(message),
+      });
+      console.log('[WS] Message sent successfully');
+    } catch (error) {
+      console.error('[WS] Error sending message:', error);
+    }
   }
 
   disconnect() {

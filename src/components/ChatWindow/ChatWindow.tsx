@@ -172,83 +172,24 @@ export const ChatWindow = () => {
   
   const {activeChatUid, messages, sendMessage, fetchMessagesforChat } = useChatMessages();
   //const [chatMessages, setChatMessages] = useState<any[]>([]);
-
-  useEffect(() => {
-    /*setMessages([
-      { id: 1, text: `Сообщение 1 в чате ${chatId}`, isOwn: false, timestamp: '10:30' },
-      { id: 2, text: `Сообщение 2 в чате ${chatId}`, isOwn: true, timestamp: '10:32' },
-      {
-        id: 3,
-        text: 'Привет! Как проект?',
-        isOwn: false,
-        attachments: ['src/assets/image_1.png'],
-        timestamp: '10:30'
-      },
-      {
-        id: 4,
-        text: 'Все отлично, спасибо!',
-        isOwn: true,
-        attachments: ['src/assets/image_2.png'],
-        timestamp: '10:32'
-      },
-      // ... другие сообщения
-      {
-        id: 5,
-        text: 'Привет! Как проект?',
-        isOwn: false,
-        //attachments: ['/image1.jpg'],
-        timestamp: '10:30'
-      },
-      {
-        id: 6,
-        text: 'Все отлично, спасибо!',
-        isOwn: true,
-        attachments: ['src/assets/image_1.png'],
-        timestamp: '10:32'
-      },
-      {
-        id: 7,
-        text: '?',
-        isOwn: false,
-        //attachments: ['/image1.jpg'],
-        timestamp: '10:30'
-      },
-      {
-        id: 8,
-        text: '!',
-        isOwn: true,
-        timestamp: '10:32'
-      },
-      {
-        id: 9,
-        text: `Привет! Как проект ${chatId}?`,
-        isOwn: false,
-        attachments: ['/image1.jpg'],
-        timestamp: '10:30'
-      },
-      {
-        id: 10,
-        text: 'Все отлично, спасибо!',
-        isOwn: true,
-        timestamp: '10:32'
-      },
-    ]);*/
-    
-    /*const loadMessages = async () => {
-      const fetchedMessages = await fetchMessagesforChat(activeChatUid);
-      setChatMessages(fetchedMessages); // загружаем сообщения для выбранного чата
-    };
-    loadMessages();*/
-    if(activeChatUid){
-      fetchMessagesforChat(activeChatUid);
-    }
-  }, [activeChatUid, fetchMessagesforChat]);
-
-  useEffect(() => {
-    // Обновляем список сообщений, когда приходят новые через WebSocket, или когда отправляем сообщения
-    //setChatMessages(messages);
-    fetchMessagesforChat(activeChatUid);
-  }, [messages, sendMessage]);
+  
+  //useEffect(() => {
+  //  
+  //  /*const loadMessages = async () => {
+  //    const fetchedMessages = await fetchMessagesforChat(activeChatUid);
+  //    setChatMessages(fetchedMessages); // загружаем сообщения для выбранного чата
+  //  };
+  //  loadMessages();*/
+  //  if(activeChatUid){
+  //    fetchMessagesforChat(activeChatUid, "old");
+  //  }
+  //}, [activeChatUid, fetchMessagesforChat]);
+  
+  //useEffect(() => {
+  //  // Обновляем список сообщений, когда приходят новые через WebSocket, или когда отправляем сообщения
+  //  //setChatMessages(messages);
+  //  fetchMessagesforChat(activeChatUid, "new");
+  //}, [messages, sendMessage]);
 
   // Функция для добавления нового сообщения
   const addMessage = (text: string) => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { webSocketService } from '../services/ws/WebSocketService';
 import { apiService } from '../services/api/apiService';
 
@@ -31,7 +31,7 @@ interface MessageContextType {
   fetchChats: () => Promise<any>;
   fetchUsers: () => Promise<User[]>;  // добавление метода для получения зарегистрированных пользователей
   fetchGroups: () => Promise<any>;
-  fetchMessagesforChat: (uid: string | null) => Promise<any>;
+  fetchMessagesforChat: (uid: string | null, LoadNew: string) => Promise<any>;
   fetchMessagesForGroup: (ou: string | null) => Promise<any>;
 
   activeChatUid: string | null;  // Добавлено состояние для активного чата
@@ -54,114 +54,10 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [ActiveChatUser, setActiveChatUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false); // Новое состояние для отслеживания загрузки
 
-  useEffect(() => {
-    if (!user) return;
-
-    webSocketService.disconnect();
+  // Создаем ref для хранения текущего activeChatUid, чтобы не перезапускать WebSocket при его изменении
+  const activeChatUidRef = useRef<string | null>(null);
   
-    webSocketService.connect(
-      (notif) => {
-        
-        console.log("NEW NOTIFICATION\nnotif:\n", notif)
-        setNotifications((prev) => [...prev, notif])
-        if (activeChatUid && notif.sender === activeChatUid) {
-          fetchMessagesforChat(activeChatUid);
-        }
-      },
-      (msg) => {
-        console.log("NEW MESSAGE\nmsg:\n", msg)
-        // Декодируем сообщение
-        const decodedMsg: Message = {
-          sender: msg.sender,
-          num: msg.messageNumber,
-          message: decodeURIComponent(atob(msg.message)),
-          //groupOu: msg.groupOu,
-          //timestamp: msg.timestamp,
-        };
-        
-        console.log("NEW MESSAGE\ndecodedMsg:\n", decodedMsg)
-        
-        // Если это сообщение от активного чата — добавляем в текущие сообщения
-        if (activeChatUid && decodedMsg.sender === activeChatUid) {
-          setMessages((prev) => [...prev, decodedMsg]);
-
-
-        } //else {
-          // Иначе это сообщение не из активного чата, добавим как уведомление
-          //setNotifications((prev) => [...prev, {
-          //  sender: decodedMsg.sender,
-          //  isGroup: !!decodedMsg.groupOu,
-          //  preview: decodedMsg.message,
-          //  timestamp: decodedMsg.timestamp,
-          //}]);
-        //}
-      }
-    );
-    console.log("webSocketService.isconnected():", webSocketService.isconnected())
-  
-    return () => {
-      webSocketService.disconnect();
-    };
-  }, [user]); // перезапуск соединения при смене юзера
-
-  useEffect(() => {
-    if(activeChatUid){
-      setMessages([]); // очистка старых сообщений
-      setIsLoading(true); // устанавливаем состояние загрузки
-      console.log("Чат uid:", activeChatUid);
-      
-      Promise.all([
-        fetchUserInfoByUid(activeChatUid),
-        //fetchMessagesforChat(activeChatUid),
-        debouncedFetchMessagesforChat(activeChatUid),
-      ])
-      .then(() => {
-        setIsLoading(false); // снимаем состояние загрузки после завершения всех запросов
-      })
-      .catch((error: any) => {
-        if (error.response?.status === 400 && error.response.data.message === "Message already received") {
-          console.log('Ошибка при загрузке новых сообщений чата: Сообщение уже получено');
-        } else {
-          console.error(`Ошибка при загрузке данных чата ${activeChatUid}:`, error);
-        }
-        setIsLoading(false); // снимаем состояние загрузки в случае ошибки
-      });
-    }
-  }, [activeChatUid]);
-
-
-  const debouncedFetchMessagesforChat = useRef(
-    debounce((uid: string | null) => {
-      fetchMessagesforChat(uid); // <-- вызывается, но с задержкой
-    }, 1000)
-  ).current;
-  
-
-  const sendMessage = (receiverUid: string, msg: string) => {
-    if (!user || !webSocketService.isconnected()) return;
-    const messageToSend = {
-      receiverUid: receiverUid,
-      //sender: 'ben',
-      messageNumber: uuidv4(),
-      message: btoa(encodeURIComponent(msg)),//to base64 //mgs
-      //messageNumber: (chatMessages.length + 1).toString(),
-      //senderUid: 'currentUser', // Здесь нужно использовать uid текущего пользователя
-      //timestamp: new Date().toLocaleTimeString(), //new Date().toISOString(),
-    }
-    console.log("messageToSend:\n", messageToSend)
-
-
-    const messageToShow = {
-      sender: getMyUid()!.toString(),
-      num: messageToSend.messageNumber,
-      message: msg,
-      //groupOu?: string;
-    }
-    console.log("messageToShow:\n", messageToShow)
-    webSocketService.sendMessage(messageToSend);
-    setMessages((prev) => [...prev, messageToShow]); // оптимистичное обновление
-
-  };
+  // Объявляем функции сначала, чтобы использовать их в обработчиках (useCallback)
 
   const fetchChats = async () => {
     if (!user) return;
@@ -201,33 +97,38 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
   
-
   const fetchGroups = async () => {
     if (!user || !webSocketService.isconnected()) return;
     const res = await apiService.get('/group');
     return res.data;
   };
 
-  const fetchMessagesforChat = async (uid: string | null) => {
+  const fetchMessagesforChat = async (uid: string | null, LoadNew: string = "old") => {
     if (!user || !webSocketService.isconnected()) return [];
     if (!uid){
       return [];
     }
-    //const res_new = await apiService.get(`/message/user/${uid}/new/?page=0&size=100`);
-    const res_old = await apiService.get(`/message/user/${uid}/old/?page=0&size=100`);
+    let res;
+    if(LoadNew === "new"){
+      res = await apiService.get(`/message/user/${uid}/new/?page=0&size=100`);
+    }else if(LoadNew === "old"){
+      res = await apiService.get(`/message/user/${uid}/old/?page=0&size=100`);
+    }
     //return res.data;
     //setMessages(res.data.content);
-    const data = res_old.data.content;
+    const data = res?.data.content;
     
     // Преобразуем каждый message из Base64 в строку
     const decodedMessages = data.map((message: { message: string }) => ({
       ...message,
       message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку
     }));
-    setMessages(decodedMessages.reverse());
-    //return res.data.content; // Получаем только массив сообщений
-
-  };// Задержка в 1000ms
+    if(LoadNew === "new"){
+      setMessages((prev) => [...prev, ...decodedMessages.reverse()]);
+    }else if(LoadNew === "old"){
+      setMessages(decodedMessages.reverse());
+    }
+  };
 
   const fetchMessagesForGroup = async (ou: string | null) => {
     if (!user || !webSocketService.isconnected()) return [];
@@ -238,6 +139,137 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     //return res.data;
     return res.data.content; // Получаем только массив сообщений
   };
+
+  const sendMessage = (receiverUid: string, msg: string) => {
+    if (!user || !webSocketService.isconnected()) return;
+    const messageToSend = {
+      receiverUid: receiverUid,
+      //sender: 'ben',
+      messageNumber: uuidv4(),
+      message: btoa(encodeURIComponent(msg)),//to base64 //mgs
+      //messageNumber: (chatMessages.length + 1).toString(),
+      //senderUid: 'currentUser', // Здесь нужно использовать uid текущего пользователя
+      //timestamp: new Date().toLocaleTimeString(), //new Date().toISOString(),
+    }
+    console.log("messageToSend:\n", messageToSend)
+
+
+    const messageToShow = {
+      sender: getMyUid()!.toString(),
+      num: messageToSend.messageNumber,
+      message: msg,
+      //groupOu?: string;
+    }
+    console.log("messageToShow:\n", messageToShow)
+    webSocketService.sendMessage(messageToSend);
+    setMessages((prev) => [...prev, messageToShow]); // оптимистичное обновление
+  };
+
+  const debouncedFetchMessagesforChat = useRef(
+    debounce((uid: string | null) => {
+      fetchMessagesforChat(uid, "old"); // <-- вызывается, но с задержкой
+    }, 1000)
+  ).current;
+
+  // Создаем обработчики, которые используют activeChatUidRef вместо значения из замыкания
+  const handleNotification = useCallback((notif: any) => {
+    console.log("NEW NOTIFICATION\nnotif:\n", notif);
+    console.log("Current activeChatUid in notification handler:", activeChatUidRef.current);
+    
+    setNotifications((prev) => [...prev, notif]);
+    
+    // Используем ref вместо переменной из замыкания
+    if (activeChatUidRef.current && notif.sender === activeChatUidRef.current) {
+      console.log(`Fetching messages for active chat ${activeChatUidRef.current}`);
+      fetchMessagesforChat(activeChatUidRef.current, "new");
+    } else {
+      console.log(`No active chat matching notification sender (active: ${activeChatUidRef.current}, sender: ${notif.sender})`);
+    }
+  }, []); // Нет зависимостей от activeChatUid (чтобы не перезапускать websocket)
+
+  const handleMessage = useCallback((msg: any) => {
+    console.log("NEW MESSAGE SENT\nmsg:\n", msg);
+    console.log("Current activeChatUid in message handler:", activeChatUidRef.current);
+    
+    // Декодируем сообщение
+    const decodedMsg: Message = {
+      sender: msg.sender,
+      num: msg.messageNumber,
+      message: decodeURIComponent(atob(msg.message)),
+      //groupOu: msg.groupOu,
+      //timestamp: msg.timestamp,
+    };
+    
+    console.log("Decoded message:", decodedMsg);
+    
+    // Используем ref вместо переменной из замыкания
+    if (activeChatUidRef.current && decodedMsg.sender === activeChatUidRef.current) {
+      console.log(`Adding message to active chat ${activeChatUidRef.current}`);
+      setMessages((prev) => [...prev, decodedMsg]);
+    } else {
+      console.log(`No active chat matching message sender (active: ${activeChatUidRef.current}, sender: ${decodedMsg.sender})`);
+      // Иначе это сообщение не из активного чата, добавим как уведомление
+      //setNotifications((prev) => [...prev, {
+      //  sender: decodedMsg.sender,
+      //  isGroup: !!decodedMsg.groupOu,
+      //  preview: decodedMsg.message,
+      //  timestamp: decodedMsg.timestamp,
+      //}]);
+    }
+  }, []); // Нет зависимостей от activeChatUid (чтобы не перезапускать websocket)
+
+  
+  useEffect(() => {
+    activeChatUidRef.current = activeChatUid;// При изменении activeChatUid обновляем ref
+    console.log('ChatMessagesContext:\nactiveChatUid changed to:', activeChatUid);
+    
+    if(activeChatUid){
+      setMessages([]); // очистка старых сообщений
+      setIsLoading(true); // устанавливаем состояние загрузки
+      
+      Promise.all([
+        fetchUserInfoByUid(activeChatUid),
+        //fetchMessagesforChat(activeChatUid),
+        debouncedFetchMessagesforChat(activeChatUid),
+      ])
+      .then(() => {
+        setIsLoading(false); // снимаем состояние загрузки после завершения всех запросов
+      })
+      .catch((error: any) => {
+        if (error.response?.status === 400 && error.response.data.message === "Message already received") {
+          console.log('ChatMessagesContext:\nОшибка при загрузке новых сообщений чата: Сообщение уже получено');
+        } else {
+          console.error(`ChatMessagesContext:\nОшибка при загрузке данных чата ${activeChatUid}:`, error);
+        }
+        setIsLoading(false); // снимаем состояние загрузки в случае ошибки
+      });
+    } else {//если нет активного чата
+      setMessages([]); // очистка старых сообщений
+      setActiveChatUser(null);
+    }
+  }, [activeChatUid]);
+
+  // Подключаем WebSocket только при изменении user
+  useEffect(() => {
+    if (!user) return;
+    
+    console.log("Setting up WebSocket connection once for user");
+    
+    // Отключаем предыдущее соединение перед созданием нового
+    webSocketService.disconnect();
+    
+    // Добавляем небольшую задержку перед переподключением
+    setTimeout(() => {
+      console.log("Connecting to WebSocket after delay");
+      webSocketService.connect(handleNotification, handleMessage);
+      console.log("webSocketService.isconnected():", webSocketService.isconnected());
+    }, 500);
+  
+    return () => {
+      console.log("Disconnecting WebSocket");
+      webSocketService.disconnect();
+    };
+  }, [user, handleNotification, handleMessage]);
 
   return (
     <ChatMessageContext.Provider value={{ 

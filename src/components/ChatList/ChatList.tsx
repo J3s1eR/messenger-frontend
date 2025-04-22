@@ -166,8 +166,12 @@ export const ChatList = () => {
   };*/
 
   const toggleChat = (chatUid: string) => {
+    console.log('toggleChat():\nCurrent activeChatUid:', activeChatUid);
+    console.log('toggleChat():\nIncoming chatUid:', chatUid);
     const newUid = activeChatUid === chatUid ? null : chatUid;
+    console.log('toggleChat():\nNew chatUid:', newUid);
     setActiveChatUid(newUid);
+    console.log('toggleChat():\nNow activeChatUid:', activeChatUid);
   };
 
 
@@ -224,9 +228,12 @@ export const ChatList = () => {
         key={user.uid}
         onClick={() => {
           //toggleChat(chat.id); 
-          toggleChat(user.uid); 
+          console.log(`--------------------------------`)
+          console.log('chatList.tsx:\nCurrent activeChatUid:', activeChatUid);
+          console.log(`chatList.tsx:\nClick chat ${user.uid}`)
+          toggleChat(user.uid);
+          console.log('chatList.tsx:\nNow activeChatUid:', activeChatUid);
           //setActiveChatId(chat.id)
-          console.log(`Open chat ${user.uid}`)
         }}
         >
 
@@ -258,9 +265,9 @@ export const ChatList = () => {
       {/*список существующих чатов*/}
       {Array.isArray(chats) && chats.length > 0 ? (
         chats.map(chat => (
-        
+          
         <Squircle
-          //key={chat.id}
+        //key={chat.id}
           key={chat.id}
           
           //className={`${styles.chatItem} ${chat.unread > 0 ? styles.unread : ''} ${openedChatId === chat.id ? styles.openedChat : ''}`}
@@ -268,24 +275,27 @@ export const ChatList = () => {
           className={`${styles.chatItem} ${chat.unread > 0 ? styles.unread : ''} ${activeChatUid === chat.id ? styles.openedChat : ''}`}
           
           //cornerRadius={12}
-
+          
           topLeftCornerRadius={0}//Левый верхний
           topRightCornerRadius={20}//Правый верхний
           bottomLeftCornerRadius={0}//Левый нижний
           bottomRightCornerRadius={20}//Правый нижний
           cornerSmoothing={1}
-  
+          
           defaultWidth={400}
           defaultHeight={96}
 
           onClick={() => {
             //toggleChat(chat.id); 
-            toggleChat(chat.id); 
+            console.log(`--------------------------------`)
+            console.log('chatList.tsx:\nCurrent activeChatUid:', activeChatUid);
+            console.log(`chatList.tsx:\nClick chat ${chat.id}`)
+            toggleChat(chat.id);
+            console.log('chatList.tsx:\nNow activeChatUid:', activeChatUid);
             //setActiveChatId(chat.id)
-            console.log(`Open chat ${chat.id}`)
           }}
           //onClick={() => toggleChat(chat.id);} // Переключение состояния
-        >
+          >
           {/* Аватарка */}
           {/*<Squircle
             cornerRadius={20}
