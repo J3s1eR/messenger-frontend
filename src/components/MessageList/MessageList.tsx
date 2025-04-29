@@ -9,7 +9,6 @@ import { useAuth } from '../../contexts/AuthContext';
 
 
 
-
 //export const MessageList = ({ messages }: MessageListProps) => {
 export const MessageList = () => {
   const {messages, isLoading} = useChatMessages();
@@ -40,9 +39,7 @@ export const MessageList = () => {
     // 2. ИЛИ это первоначальная загрузка сообщений (из пустого массива)
     // 3. И пользователь не прокручивал вверх вручную
     if ((messages.length > prevMessagesLength.current || prevMessagesLength.current === 0) && !userScrolled) {
-      //messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
       // Найдем scrollable контейнер (это .content внутри CustomScrollbar)
-      //const scrollContainer = messagesEndRef.current?.parentElement;
       const scrollContainer = messagesEndRef.current?.parentElement?.parentElement;
       if (scrollContainer) {
       // Прокручиваем до конца, но не заходя на поле ввода
@@ -61,9 +58,7 @@ export const MessageList = () => {
 
   // Кнопка для прокрутки вниз
   const scrollToBottom = () => {
-    //messagesEndRef.current?.scrollBy({ top: -60, behavior: 'smooth' });
     // Найдем scrollable контейнер (это .content внутри CustomScrollbar)
-    //const scrollContainer = messagesEndRef.current?.parentElement;
     const scrollContainer = messagesEndRef.current?.parentElement?.parentElement;
     if (scrollContainer) {
       // Прокручиваем до конца, но не заходя на поле ввода
@@ -79,14 +74,11 @@ export const MessageList = () => {
   };
 
   return (
-    
-
     <CustomScrollbar className={styles.messageListAllWindow} onScroll={handleScroll}>
       <div className={styles.messageList}>
       
       {isLoading ? <div className={styles.EmptyChatList}>Загрузка...</div> : messages.length === 0 && <div className={styles.EmptyChatList}>Сообщений нет</div>}
 
-    
       {messages.map(message => (
         <MessageBubble 
           /*key={message.id}
@@ -107,23 +99,22 @@ export const MessageList = () => {
           <div className={styles.OldNewMessagesDeviderLine}></div>
         </div>
         
-        <div ref={messagesEndRef} style={{ height: '1px', margin: '0' }} />
+        <div ref={messagesEndRef} className={styles.messagesEndRef}/>
       </>}
     
     </div>
     
 
     {isLoading ? <></> : messages.length !== 0 &&  <>
-       {/* {userScrolled && messages.length > 0 && ( */}
-       {userScrolled && ( 
-        <button 
-          type="button"
-          onClick={scrollToBottom} 
-          className={styles.scrollToBottomButton}
-        >
-          ↓
-        </button>
-       )} 
+
+      <button 
+        type="button"
+        onClick={scrollToBottom} 
+        className={`${styles.scrollToBottomButton} ${userScrolled ? styles.Visible : styles.Hidden}`}
+      >
+        ↓
+      </button>
+       
     </>}
 
        

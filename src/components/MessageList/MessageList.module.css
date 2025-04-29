@@ -9,8 +9,6 @@
     margin-bottom: 60px; /* Чтобы нижний элемент (поле ввода чата) не перекрывал сообщения (во время прокрутки из-за .messageListAllWindow и полупрозрачности, сообщения будет видно под инпутом)*/
 
     width: 100%;       /* Автоматическая ширина */
-
-    
   }
 
   .EmptyChatList{
@@ -29,21 +27,10 @@
     position: relative;
   }
   
-  /* Добавьте стили для прокрутки */
-  /*
-  .messageList::-webkit-scrollbar {
-    width: 4px;
+  .messagesEndRef{
+    height: 1px;
+    margin: 0;
   }
-  
-  .messageList::-webkit-scrollbar-track {
-    background: #E6E6E6; 
-  }
-  
-  .messageList::-webkit-scrollbar-thumb {
-    background: #E6E6E6; 
-    border-radius: 2px;
-  }
-    */
 
   .scrollToBottomButton{
     position: absolute; 
@@ -70,11 +57,24 @@
     font-weight: 500;
     font-family: inherit;
 
-    transition: border-color 0.25s;
+    /* Переходы */
+    transition: opacity 0.4s ease, transform 0.3s ease, border-color 0.25s; /*opacity, transform при появлении, исчезновении*/ /*border-color при наведении*/
   }
 
   .scrollToBottomButton:hover{
     border-color: #e3e3e3;
+  }
+
+  .scrollToBottomButton.Visible{
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  
+  .scrollToBottomButton.Hidden{
+    opacity: 0;
+    transform: translateY(80px);
+    pointer-events: none;
   }
 
   .OldNewMessagesDeviderContainer{
@@ -100,14 +100,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /*margin: 2px 40px;*/
+
     color:#404040; /*#1a1a1a*/
     width: fit-content;
     white-space: nowrap;
-    /*display: -webkit-box;*/
-    /*-webkit-line-clamp: 1;
-    line-clamp: 1;
-    font-size: 16px;
-    line-height: 1;
-    font-weight: 400;*/
   }
