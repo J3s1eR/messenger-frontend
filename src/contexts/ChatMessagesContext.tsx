@@ -29,6 +29,7 @@ interface MessageContextType {
   sendMessage: (receiverUid: string, msg: string) => void;
   notifications: any[];
   fetchChats: () => Promise<any>;
+  fetchNewMessagesCountByUserUid: (uid: string | null) => Promise<number>;
   fetchUsers: () => Promise<User[]>;  // добавление метода для получения зарегистрированных пользователей
   fetchGroups: () => Promise<any>;
   fetchMessagesforChat: (uid: string | null, LoadNew: string) => Promise<any>;
@@ -65,6 +66,53 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     //return res.data;
     return res.data.content; // Получаем только массив чатов
   };
+
+  const fetchNewMessagesCountByUserUid = async (uid: string | null) => {
+    if (!user) return 0; // Возвращаем 0, если нет пользователя
+    if (!uid) return 0;  // Возвращаем 0, если нет uid
+    
+    try {
+      console.log(`ChatMessagesContext.tsx:\nFetching new messages count for user ${uid}`);
+      const res = await apiService.get(`/message/user/${uid}/new/count`);
+      
+      // Логируем полный ответ для отладки
+      console.log(`ChatMessagesContext.tsx:\nChat:`, uid);
+      console.log(`ChatMessagesContext.tsx:\nFull API response for new messages count:`, res);
+      console.log(`ChatMessagesContext.tsx:\nResponse data for new messages count:`, res.data);
+      console.log(`ChatMessagesContext.tsx:\nResponse data type for new messages count:`, typeof res.data);
+      
+      // Более детальная проверка типа
+      console.log(`ChatMessagesContext.tsx:\nTesting conditions:`, {
+        'res.data !== undefined': res.data !== undefined,
+        'res.data !== null': res.data !== null,
+        'typeof res.data === "number"': typeof res.data === 'number',
+        'res.data is valid number': !isNaN(Number(res.data))
+      });
+      
+      // Преобразуем к числу, независимо от исходного типа
+      let count: number;
+      
+      if (res.data && typeof res.data === 'number') {
+        count = res.data;
+      } else if (res.data && typeof res.data.content === 'number') {
+        count = res.data.content;
+      } else if (typeof res.data === 'string' && !isNaN(Number(res.data))) {
+        count = Number(res.data);
+      } else if (res.data && res.data.content && typeof res.data.content !== 'undefined') {
+        console.warn(`ChatMessagesContext.tsx:\nInvalid response structure for new messages count:`, res.data);
+        return -2; // Если структура ответа не соответствует ожиданиям
+      } else {
+        count = 0; // Значение по умолчанию
+      }
+      
+      console.log(`ChatMessagesContext.tsx:\nFinal count value:`, count, 'type:', typeof count);
+      return count;
+      
+    } catch (error) {
+      console.error(`ChatMessagesContext.tsx:\nError fetching new messages count for user ${uid}:`, error);
+      return -1; // В случае ошибки возвращаем -1
+    }
+  }
 
   const fetchUsers = async () => {
     if(users.length > 0) return users;//временное решение
@@ -111,7 +159,11 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let res;
     if(LoadNew === "new"){
       res = await apiService.get(`/message/user/${uid}/new/?page=0&size=100`);
-    }else if(LoadNew === "old"){
+    }
+    else if(LoadNew === "new 1"){
+      res = await apiService.get(`/message/user/${uid}/new/?page=0&size=1`);
+    }
+    else if(LoadNew === "old"){
       res = await apiService.get(`/message/user/${uid}/old/?page=0&size=100`);
     }
     //return res.data;
@@ -125,7 +177,11 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }));
     if(LoadNew === "new"){
       setMessages((prev) => [...prev, ...decodedMessages.reverse()]);
-    }else if(LoadNew === "old"){
+    }
+    else if(LoadNew === "new 1"){
+      setMessages((prev) => [...prev, ...decodedMessages.reverse()]);
+    }
+    else if(LoadNew === "old"){
       setMessages(decodedMessages.reverse());
     }
   };
@@ -231,6 +287,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
         fetchUserInfoByUid(activeChatUid),
         //fetchMessagesforChat(activeChatUid),
         debouncedFetchMessagesforChat(activeChatUid),
+        fetchMessagesforChat(activeChatUid, "new 1"),
       ])
       .then(() => {
         setIsLoading(false); // снимаем состояние загрузки после завершения всех запросов
@@ -277,6 +334,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
         sendMessage, 
         notifications, 
         fetchChats, 
+        fetchNewMessagesCountByUserUid,
         fetchUsers, 
         fetchGroups, 
         fetchMessagesforChat, 

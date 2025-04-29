@@ -137,15 +137,62 @@ export const ChatList = () => {
   const {activeChatUid, setActiveChatUid} = useChatMessages();
   const {getMyUid} = useAuth();
 
-  const { fetchChats, users, fetchUsers, notifications, isLoading} = useChatMessages();
+  const { fetchChats, users, fetchUsers, notifications, isLoading, fetchNewMessagesCountByUserUid} = useChatMessages();
   const [chats, setChats] = useState<any[]>([]);
+
+  // Добавляем эффект для обновления счетчика непрочитанных сообщений при получении уведомлений
+  //useEffect(() => {
+  //  if (notifications.length > 0 && chats.length > 0) {
+  //    // Получаем последнее уведомление
+  //    const lastNotification = notifications[notifications.length - 1];
+  //    
+  //    // Находим чат, к которому относится уведомление
+  //    const chatToUpdate = chats.find(chat => chat.id === lastNotification.sender);
+  //    
+  //    if (chatToUpdate && lastNotification.sender !== activeChatUid) {
+  //      // Увеличиваем счетчик непрочитанных сообщений только если чат не активен
+  //      chatToUpdate.unread = (chatToUpdate.unread || 0) + 1;
+  //      console.log(`chatList.tsx:\nUpdated unread count for chat ${chatToUpdate.id} to ${chatToUpdate.unread}`);
+  //      
+  //      // Обновляем список чатов для вызова ререндера
+  //      setChats([...chats]);
+  //    }
+  //  }
+  //}, [notifications, chats, activeChatUid]);
 
   useEffect(() => {
     const loadChatsAndUsers = async () => {
-      const fetchedChats = await fetchChats();
-      setChats(fetchedChats);
-      fetchUsers();
+      try {
+        const fetchedChats = await fetchChats();
+        if (fetchedChats && Array.isArray(fetchedChats)) {
+          
+          // Получаем количество новых сообщений для каждого чата
+          for (const chat of fetchedChats) {
+            if (chat && chat.id) {
+              try {
+                console.log('chatList.tsx:\nFetching new messages for:', chat.id);
+                const newMessagesCount = await fetchNewMessagesCountByUserUid(chat.id);
+                console.log('chatList.tsx:\nChat:', chat.id, '\nNew messages count value:', newMessagesCount, 'type:', typeof newMessagesCount);
+                chat.unread = Number(newMessagesCount);
+              } catch (err) {
+                console.error('chatList.tsx:\nError getting message count for chat', chat.id, err);
+                chat.unread = 0;
+              }
+            }
+          }
+          setChats(fetchedChats);//Обновляем список чатов только после получения количества сообщений
+        } else {
+          console.warn('fetchChats returned invalid data:', fetchedChats);
+          setChats([]);
+        }
+        
+        // Загружаем список пользователей
+        fetchUsers();
+      } catch (error) {
+        console.error('Error loading chats and users:', error);
+      }
     };
+    
     loadChatsAndUsers();
   }, [fetchChats]);
 
@@ -170,6 +217,18 @@ export const ChatList = () => {
     console.log('toggleChat():\nIncoming chatUid:', chatUid);
     const newUid = activeChatUid === chatUid ? null : chatUid;
     console.log('toggleChat():\nNew chatUid:', newUid);
+    
+    // Сбрасываем счетчик непрочитанных сообщений только при активации чата
+    //if (newUid !== null) {
+    //  const chatToUpdate = chats.find(chat => chat.id === chatUid);
+    //  if (chatToUpdate) {
+    //    chatToUpdate.unread = 0;
+    //    console.log(`toggleChat():\nReset unread count for chat ${chatUid}`);
+    //    // Обновляем список чатов для вызова ререндера
+    //    setChats([...chats]);
+    //  }
+    //}
+    
     setActiveChatUid(newUid);
     console.log('toggleChat():\nNow activeChatUid:', activeChatUid);
   };
