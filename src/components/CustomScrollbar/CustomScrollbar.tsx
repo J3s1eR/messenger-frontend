@@ -5,7 +5,7 @@ type CustomScrollbarProps = {
   children: React.ReactNode;
   className?: string; // Добавляем поддержку className
   style?: CSSProperties; // Добавляем поддержку стилей
-  onScroll?: () => void; // Добавляем обработчик прокрутки
+  onScroll?: (event: React.UIEvent<HTMLDivElement>) => void; // Добавляем обработчик прокрутки
 };
 
 export const CustomScrollbar = ({ children, className, style, onScroll }: CustomScrollbarProps) => {
@@ -36,10 +36,13 @@ export const CustomScrollbar = ({ children, className, style, onScroll }: Custom
     } else {
       setScrollPercent(0);
     }
+  };
 
-    // Вызываем внешний обработчик, если он предоставлен
+  // Вызываем внешний обработчик скролла, если он предоставлен
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    updateScrollState();
     if (onScroll) {
-      onScroll();
+      onScroll(event);
     }
   };
 
@@ -47,13 +50,8 @@ export const CustomScrollbar = ({ children, className, style, onScroll }: Custom
     const container = containerRef.current;
     if (!container) return;
 
-    const handleScroll = () => {
-      updateScrollState();
-    };
-
     // Первоначальное обновление и настройка слушателей
     updateScrollState();
-    container.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', updateScrollState);
 
     // Наблюдатель за изменениями содержимого
@@ -65,7 +63,6 @@ export const CustomScrollbar = ({ children, className, style, onScroll }: Custom
     });
 
     return () => {
-      container.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateScrollState);
       observer.disconnect();
     };
@@ -133,7 +130,11 @@ export const CustomScrollbar = ({ children, className, style, onScroll }: Custom
 
   return (
     <div className={`${styles.scrollContainer} ${className || ''}`} style={style}>
-      <div className={styles.content} ref={containerRef}>
+      <div 
+        className={styles.content} 
+        ref={containerRef} 
+        onScroll={handleScroll}
+      >
         {children}
       </div>
       {isScrollbarVisible && (

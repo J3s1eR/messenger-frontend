@@ -26,6 +26,7 @@
   .messageListAllWindow{
     margin-top: -72px; /* Поднятие вверх (элемент заходит под хедер окна сообщений) */
     margin-bottom: -60px; /* Опускание вниз (элемент заходит под инпут окна сообщений) */
+    position: relative;
   }
   
   /* Добавьте стили для прокрутки */
@@ -43,3 +44,70 @@
     border-radius: 2px;
   }
     */
+
+  .scrollToBottomButton{
+    position: absolute; 
+    bottom: 80px;
+    right: 20px;
+    z-index: 9; /*над сообщениями, но под вводом текста*/
+    padding: 10px;
+    border-radius: 50%;
+    color: #1a1a1a;
+
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.65);
+
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+
+    transition: border-color 0.25s;
+  }
+
+  .scrollToBottomButton:hover{
+    border-color: #e3e3e3;
+  }
+
+  .OldNewMessagesDeviderContainer{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 2em;
+    width: 100%;
+  }
+
+  .OldNewMessagesDeviderLine{
+    display: flex;
+    height: 1px;
+    width: 100%;
+    background-color:#40404040; /*#1a1a1a*/
+    margin: 4px 20px;
+
+    align-items: center;
+    justify-content: center;
+  }
+
+  .OldNewMessagesDeviderContent{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /*margin: 2px 40px;*/
+    color:#404040; /*#1a1a1a*/
+    width: fit-content;
+    white-space: nowrap;
+    /*display: -webkit-box;*/
+    /*-webkit-line-clamp: 1;
+    line-clamp: 1;
+    font-size: 16px;
+    line-height: 1;
+    font-weight: 400;*/
+  }
