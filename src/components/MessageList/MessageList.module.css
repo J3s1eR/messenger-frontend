@@ -77,6 +77,10 @@
     pointer-events: none;
   }
 
+  .scrollToBottomButton:focus{
+    outline: 0px;
+  }
+
   .OldNewMessagesDeviderContainer{
     display: flex;
     flex-direction: row;
