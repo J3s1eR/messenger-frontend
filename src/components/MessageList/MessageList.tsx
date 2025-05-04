@@ -11,7 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 //export const MessageList = ({ messages }: MessageListProps) => {
 export const MessageList = () => {
-  const {messages, isLoading} = useChatMessages();
+  const {messages, MessagesForChatWithContext, isLoading} = useChatMessages();
   const {getMyUid} = useAuth();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -95,7 +95,7 @@ export const MessageList = () => {
       {isLoading ? <></> : messages.length !== 0 &&  <>
         <div className={styles.OldNewMessagesDeviderContainer}> 
           <div className={styles.OldNewMessagesDeviderLine}></div>
-            <div className={styles.OldNewMessagesDeviderContent}>Новые сообщения</div>
+            <div className={styles.OldNewMessagesDeviderContent}>Новые сообщения ({MessagesForChatWithContext.newMessagesCount})</div>
           <div className={styles.OldNewMessagesDeviderLine}></div>
         </div>
         
