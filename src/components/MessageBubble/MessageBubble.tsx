@@ -12,13 +12,18 @@ type MessageProps = {
   isOwn: boolean;
   attachments?: string[];
   timestamp?: string;
+
+  isFirstInGroup?: boolean;
+  isLastInGroup?: boolean;
 };
 
 export const MessageBubble = ({ 
   text, 
   isOwn, 
   attachments,
-  timestamp
+  timestamp,
+  isFirstInGroup,
+  isLastInGroup,
 }: MessageProps) => {
 
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -51,10 +56,10 @@ export const MessageBubble = ({
 
 
   return (
-    <div className={`${styles.message} ${isOwn ? styles.own : ''}`}>
+    <div className={`${styles.message} ${isOwn ? styles.own : ''} ${isFirstInGroup ? styles.firstInGroup : ''} ${isLastInGroup ? styles.lastInGroup : ''}`}>
 
       {/*@ts-ignore*/} {/*Временное решение для исправления ошибки (для сборки)*/}
-      {isOwn ? null : <BubbleTailIncoming className={styles.BubbleTailIncoming} width={16} height={14} color="#5196FF"/>}
+      {isOwn ? null : <BubbleTailIncoming className={`${styles.BubbleTail} ${styles.Incoming} ${isLastInGroup ? styles.lastInGroup : ''}`} width={16} height={14} color="#5196FF"/>}
       
 
       <Squircle 
@@ -62,8 +67,8 @@ export const MessageBubble = ({
 
         topLeftCornerRadius={10}//Левый верхний
         topRightCornerRadius={10}//Правый верхний
-        bottomLeftCornerRadius={isOwn ? 10 : 0}//Левый нижний //если сообщение не моё, то острый угол слева снизу
-        bottomRightCornerRadius={isOwn ? 0 : 10}//Правый нижний //если сообщение моё, то острый угол справа снизу
+        bottomLeftCornerRadius={(!isOwn && isLastInGroup) ? 0 : 10}//Левый нижний //если сообщение не моё и последнее (в "группе" сообщений от этого пользователя), то острый угол слева снизу
+        bottomRightCornerRadius={(isOwn && isLastInGroup) ? 0 : 10}//Правый нижний //если сообщение моё и последнее (в "группе" сообщений от этого пользователя), то острый угол справа снизу
 
         cornerSmoothing={1}
 
@@ -85,8 +90,8 @@ export const MessageBubble = ({
           key={attachment} className={styles.attachment}
           topLeftCornerRadius={10}//Левый верхний
           topRightCornerRadius={10}//Правый верхний
-          bottomLeftCornerRadius={isOwn ? 10 : 10}//Левый нижний //если сообщение не моё, то острый угол слева снизу
-          bottomRightCornerRadius={isOwn ? 10 : 10}//Правый нижний //если сообщение моё, то острый угол справа снизу
+          bottomLeftCornerRadius={(!isOwn && isLastInGroup) ? 10 : 10}//Левый нижний //если сообщение не моё, то острый угол слева снизу
+          bottomRightCornerRadius={(isOwn && isLastInGroup) ? 10 : 10}//Правый нижний //если сообщение моё, то острый угол справа снизу
 
           cornerSmoothing={1}
 
@@ -107,7 +112,7 @@ export const MessageBubble = ({
       </Squircle>
 
       {/*@ts-ignore*/} {/*Временное решение для исправления ошибки (для сборки)*/}
-      {isOwn ? <BubbleTailOutgoing className={styles.BubbleTailOutgoing} width={16} height={14} color="#39DA1F"/> : null}
+      {isOwn ? <BubbleTailOutgoing className={`${styles.BubbleTail} ${styles.Outgoing} ${isLastInGroup ? styles.lastInGroup : ''}`} width={16} height={14} color="#39DA1F"/> : null}
       {timestamp && <div className={styles.timestamp}>{timestamp}</div>}
     </div>
   );

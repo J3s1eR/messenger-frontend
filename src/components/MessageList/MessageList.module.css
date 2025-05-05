@@ -26,6 +26,11 @@
     margin-bottom: -60px; /* Опускание вниз (элемент заходит под инпут окна сообщений) */
     position: relative;
   }
+
+  /*.messageList > [class*="message"]{/*Выберем всех детей (баблы сообщений), которые в названии класса содержат message*/
+  /*  margin-top: 4px;
+    margin-bottom: 4px;
+  }*/
   
   .messagesEndRef{
     height: 1px;

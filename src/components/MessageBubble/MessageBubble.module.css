@@ -3,9 +3,20 @@
   flex-direction: row;
   align-items: flex-end;
   justify-content: flex-start;
-  margin: 10px 10px;
+  margin: 4px 10px;
   max-width: 100%;
   color: white;
+}
+
+.message.firstInGroup{
+  margin-top: 10px;
+  /*margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 4px;*/
+}
+
+.message.lastInGroup{
+  margin-bottom: 10px;
 }
 
 .message.own {
@@ -23,17 +34,45 @@
   min-width: 20px;
   max-width: 70%;
   min-height: fit-content;
+
+  z-index: 2;/*чтобы сообщение (бабла) было поверх своего хвостика*/
+
+  /* Переходы */
+  transition: transform 0.5s ease, box-shadow 0.2s ease; /*transform и box-shadow при активации (:active)*/
 }
 
-.BubbleTailIncoming{
+/*рисуем хвосты у всех баблов, чтобы не было смещения баблов*/
+.BubbleTail{
   position: relative;
+  z-index: 1;/*чтобы хвост сообщения был ниже бабла */
+  opacity: 1;
+
+  /* Переходы */
+  transition: transform 0.5s ease, opacity 0.8s ease-in, box-shadow 0.2s ease; /*transform и opacity при появлении, исчезновении| box-shadow при активации (:active)*/
+}
+
+.BubbleTail.Incoming{
   right: -2px;
-  /*top: -16px;*/
+  /*transform: translateX(2px);*/
 }
 
-.BubbleTailOutgoing{
-  position: relative;
+.BubbleTail.Outgoing{
   right: 2px;
+  /*transform: translateX(-2px);*/
+}
+
+/*отображаем хвосты только у последних сообщений в "группе"*/
+.BubbleTail.Incoming:not(.lastInGroup){
+  /*color: #00000000;прозрачный цвет скрывает хвосты у всех баблов, кроме последних в "группе"*/
+  opacity: 0;/*прозрачность цвет скрывает хвосты у всех баблов, кроме последних в "группе"*/
+  transform: translateX(22px) translateY(-2px);
+}
+
+/*отображаем хвосты только у последних сообщений в "группе"*/
+.BubbleTail.Outgoing:not(.lastInGroup){
+  /*color: #00000000;прозрачный цвет скрывает хвосты у всех баблов, кроме последних в "группе"*/
+  opacity: 0;/*прозрачность цвет скрывает хвосты у всех баблов, кроме последних в "группе"*/
+  transform: translateX(-22px) translateY(-2px);
 }
 
 .message.own .bubble {
@@ -42,10 +81,10 @@
   border: none;
 }
 
-/* Hover effects */
+/* Active effects */
 .message:active .bubble,
-.message:active .BubbleTailIncoming,
-.message:active .BubbleTailOutgoing {
+.message:active .BubbleTail.Incoming,
+.message:active .BubbleTail.Outgoing {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }

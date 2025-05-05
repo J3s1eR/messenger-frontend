@@ -79,7 +79,15 @@ export const MessageList = () => {
       
       {isLoading ? <div className={styles.EmptyChatList}>Загрузка...</div> : messages.length === 0 && <div className={styles.EmptyChatList}>Сообщений нет</div>}
 
-      {messages.map(message => (
+      {messages.map((message, index)  => {
+        const currentSender = message.sender;
+        const prevSender = index > 0 ? messages[index - 1].sender : null;
+        const nextSender = index < messages.length - 1 ? messages[index + 1].sender : null;
+      
+        const isFirstInGroup = currentSender !== prevSender;
+        const isLastInGroup = currentSender !== nextSender;
+        const isOwn = message.sender === getMyUid() ? true : false;
+        return(
         <MessageBubble 
           /*key={message.id}
           text={message.text}
@@ -87,10 +95,13 @@ export const MessageList = () => {
           attachments={message.attachments}*/
           key={message.num}
           text={message.message}
-          isOwn={message.sender === getMyUid() ? true : false}
+          isOwn={isOwn}
+          isFirstInGroup={isFirstInGroup}
+          isLastInGroup={isLastInGroup}
           //attachments={message.attachments} //пока нет поддержки
-        />
-      ))}
+        />);
+      }
+      )}
 
       {isLoading ? <></> : messages.length !== 0 &&  <>
         <div className={styles.OldNewMessagesDeviderContainer}> 
