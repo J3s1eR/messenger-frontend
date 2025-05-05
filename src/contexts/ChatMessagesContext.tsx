@@ -190,7 +190,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       decodedMessages = data
       .map((message: Message) => ({
         ...message,
-        message: "new_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку
+        message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку "new_ " + 
       }))
       .filter((message: Message) => message.sender !== getMyUid());//показываем только сообщения собеседника, потому что мои сообщения уже есть в old
       }
@@ -198,7 +198,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       decodedMessages = data
       .map((message: { message: string }) => ({
         ...message,
-        message: "old_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку
+        message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку "old_ " + 
       }))
       .reverse();
     }
