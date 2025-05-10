@@ -101,27 +101,43 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
     //const messageInputRefEl = scrollContainer?.parentElement?.nextElementSibling
     const messageInputRefEl = messageInputRef.current;
     
+    //если пользователь прокрутил вверх, возвращаем его к концу прочитанных сообщений
+    if(userScrolledUp){
+      if (messagesEndRefEl && messageInputRefEl && scrollContainer) {
+        const inputHeight = messageInputRefEl.clientHeight;
+        // Прокручиваем до конца, но не заходя на поле ввода
+        //scrollContainer.clientHeight – высота контейнера с сообщениями (видимая часть в браузере)
+        //scrollContainer.scrollHeight – вся высота контейнера с сообщениями (выходит за границы экрана в браузере (сверху и снизу))
+        
+        //inputHeight -- высота поля ввода
+        
+        // messagesEndRefEl.getBoundingClientRect().bottom -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался наверху видимой части экрана
+        // messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана 
+        // messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана, и не перекрывался полем ввода, а был чуть выше его границы 
+        const targetScroll = messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight;
 
-    if (messagesEndRefEl && messageInputRefEl && scrollContainer) {
-      const inputHeight = messageInputRefEl.clientHeight;
-      // Прокручиваем до конца, но не заходя на поле ввода
-      //scrollContainer.clientHeight – высота контейнера с сообщениями (видимая часть в браузере)
-      //scrollContainer.scrollHeight – вся высота контейнера с сообщениями (выходит за границы экрана в браузере (сверху и снизу))
-
-      //inputHeight -- высота поля ввода
-
-      // messagesEndRefEl.getBoundingClientRect().bottom -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался наверху видимой части экрана
-      // messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана 
-      // messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана, и не перекрывался полем ввода, а был чуть выше его границы 
-      const targetScroll = messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight;
-      
-      scrollContainer.scrollBy({
-        top: targetScroll,
-        left: 0,
-        behavior: 'smooth'
-      });
+        scrollContainer.scrollBy({
+          top: targetScroll,
+          left: 0,
+          behavior: 'smooth'
+        });
+      }
+      setuserScrolledUp(false);
     }
-    setuserScrolledUp(false);
+    //если пользователь уже прокрутил до конца прочитанных сообщений, прокручиваем в самый низ, показывая новые сообщения
+    else if(!userScrolledUp){
+      if (scrollContainer) {
+        // Прокручиваем до конца, но не заходя на поле ввода
+        const targetScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        
+        // Используем smooth behavior
+        scrollContainer.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        });
+      }
+      setCanReadNewMessages(false);
+    }
   };
 
   return (
@@ -178,7 +194,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
       )
       }
 
-      {isLoading ? <></> : messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0 &&  (
+      {isLoading ? <></> : messages.length !== 0 &&  (
       <div ref={newMessagesEndRef} className={styles.messagesEndRef}/>
       )
       }
@@ -188,15 +204,23 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
     
 
     {isLoading ? <></> : messages.length !== 0 &&  <>
+      <div className={styles.scrollToBottom}>
+        {/*MessagesForChatWithContext.newMessagesCount > 0 && */}
+            <div className={`${styles.Count} ${MessagesForChatWithContext.newMessagesCount > 0 ? canReadNewMessages ? styles.Visible : styles.Hidden : styles.Hidden}`}>
+              {MessagesForChatWithContext.newMessagesCount}
+            </div>
+        {/**/}
+        
+        <button 
+          type="button"
+          onClick={scrollToBottom} 
+          className={`${styles.scrollToBottomButton} 
+          ${userScrolledUp ? styles.Visible : canReadNewMessages ? styles.Visible : styles.Hidden}`}
+        >
 
-      <button 
-        type="button"
-        onClick={scrollToBottom} 
-        className={`${styles.scrollToBottomButton} ${userScrolledUp ? styles.Visible : styles.Hidden}`}
-      >
-        ↓
-      </button>
-       
+          ↓
+        </button>
+      </div> 
     </>}
 
        
