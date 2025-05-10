@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MessageBubble } from '../MessageBubble/MessageBubble';
 import styles from './MessageList.module.css';
 
@@ -7,36 +7,67 @@ import { CustomScrollbar } from '../CustomScrollbar/CustomScrollbar';
 import { useChatMessages } from '../../contexts/ChatMessagesContext';
 import { useAuth } from '../../contexts/AuthContext';
 
-
+type MessageListProps ={
+  messageInputRef: React.RefObject<HTMLDivElement | null>;
+}
 
 //export const MessageList = ({ messages }: MessageListProps) => {
-export const MessageList = () => {
+export const MessageList = ({messageInputRef}: MessageListProps) => {
+
   const {messages, MessagesForChatWithContext, isLoading} = useChatMessages();
   const {getMyUid} = useAuth();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const newMessagesEndRef = useRef<HTMLDivElement>(null);
 
   //const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [userScrolled, setUserScrolled] = useState(false);
+  const [userScrolledUp, setuserScrolledUp] = useState(false);
+  const [canReadNewMessages, setCanReadNewMessages] = useState(false);
   const prevMessagesLength = useRef(0);
 
   // Отслеживаем прокрутку пользователем
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     //console.log(`MessageList.tsx:\handleScroll():\nscrolled`)
-    const messagesEndRefEl = messagesEndRef.current;
-    console.log(`___________________________`);
-    console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nmessagesEndRefEl.getBoundingClientRect().bottom:`, messagesEndRefEl!.getBoundingClientRect().bottom);
     const target = event.currentTarget;
-    const { scrollTop, scrollHeight, clientHeight } = target;
-    console.log(`MessageList/MessageList.tsx:\nscrollToBottom\scrollHeight:`, scrollHeight);
-    console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nscrollHeight - messagesEndRefEl!.getBoundingClientRect().bottom:`, scrollHeight - messagesEndRefEl!.getBoundingClientRect().bottom);
-    //console.log(`MessageList.tsx:\handleScroll():\nscrollTop:`, scrollTop, `\nscrollHeight:`, scrollHeight, `\nclientHeight:`, clientHeight);
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 100; // в пределах 100px от нижней границы
 
-    //console.log(`MessageList.tsx:\handleScroll():\nsetUserScrolled(`, !isAtBottom, `)`)
-    //console.log(`MessageList.tsx:\handleScroll():\nscrollHeight:`, scrollHeight, `\nscrollTop:`, scrollTop, `\nclientHeight:`, clientHeight, `\nisAtBottom:`, isAtBottom);
-    
-    setUserScrolled(!isAtBottom);
+    const scrollContainer = messagesEndRef.current?.parentElement?.parentElement;
+    const messagesEndRefEl = messagesEndRef.current;
+    const newMessagesEndRefEl = newMessagesEndRef.current;
+    const messageInputRefEl = messageInputRef.current;
+
+    const { scrollTop, scrollHeight, clientHeight } = target;
+    //console.log(`MessageList.tsx:\handleScroll():\nscrollTop:`, scrollTop, `\nscrollHeight:`, scrollHeight, `\nclientHeight:`, clientHeight);
+
+    if(messagesEndRefEl && messageInputRefEl && scrollContainer && newMessagesEndRefEl) {
+      const inputHeight = messageInputRefEl.clientHeight;
+      //console.log(`MessageList.tsx:\handleScroll():\nmessagesEndRefEl:`, messagesEndRefEl)
+      //console.log(`MessageList.tsx:\handleScroll():\nmessageInputRefEl:`, messageInputRefEl)
+
+      // messagesEndRefEl.getBoundingClientRect().bottom -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался наверху видимой части экрана
+      // messagesEndRefEl.getBoundingClientRect().bottom - clientHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана 
+      // messagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана, и не перекрывался полем ввода, а был чуть выше его границы 
+      const diff = messagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight;
+      const isAtBottom = diff < 100;
+      console.log(`MessageList.tsx:\handleScroll():\ndiff:`, diff, `\nisAtBottom:`, isAtBottom);
+      
+      //const isAtBottom = scrollHeight - scrollTop - clientHeight < 100; // в пределах 100px от нижней границы
+      
+      //console.log(`MessageList.tsx:\handleScroll():\nsetuserScrolledUp(`, !isAtBottom, `)`)
+      //console.log(`MessageList.tsx:\handleScroll():\nscrollHeight:`, scrollHeight, `\nscrollTop:`, scrollTop, `\nclientHeight:`, clientHeight, `\nisAtBottom:`, isAtBottom);
+      
+      setuserScrolledUp(!isAtBottom);
+
+
+      //после прокрутки старых сообщений, проверяем, можно ли прочитать все новые сообщения разом, или пользователь промотал их до конца
+      const diff2 = newMessagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight;
+      const canReadAllNewMessages = diff2 > 10;  
+      console.log(`MessageList.tsx:\handleScroll():\ndiff2:`, diff2, `\ncanReadAllNewMessages:`, canReadAllNewMessages);
+
+      setCanReadNewMessages(canReadAllNewMessages);
+
+
+
+    }
   };
 
   useEffect(() => {
@@ -44,7 +75,7 @@ export const MessageList = () => {
     // 1. Количество сообщений увеличилось (пришло новое сообщение)
     // 2. ИЛИ это первоначальная загрузка сообщений (из пустого массива)
     // 3. И пользователь не прокручивал вверх вручную
-    if ((messages.length > prevMessagesLength.current || prevMessagesLength.current === 0) && !userScrolled) {
+    if ((messages.length > prevMessagesLength.current || prevMessagesLength.current === 0) && !userScrolledUp) {
       // Найдем scrollable контейнер (это .content внутри CustomScrollbar)
       const scrollContainer = messagesEndRef.current?.parentElement?.parentElement;
       if (scrollContainer) {
@@ -60,67 +91,37 @@ export const MessageList = () => {
     }
     
     prevMessagesLength.current = messages.length;
-  }, [messages, userScrolled]);
+  }, [messages, userScrolledUp]);
 
   // Кнопка для прокрутки вниз
   const scrollToBottom = () => {
     // Найдем scrollable контейнер (это .content внутри CustomScrollbar)
     const scrollContainer = messagesEndRef.current?.parentElement?.parentElement;
     const messagesEndRefEl = messagesEndRef.current;
-    const messageInputRefEl = scrollContainer?.parentElement?.nextElementSibling
+    //const messageInputRefEl = scrollContainer?.parentElement?.nextElementSibling
+    const messageInputRefEl = messageInputRef.current;
+    
 
-
-    if (messagesEndRefEl && messageInputRefEl) {
+    if (messagesEndRefEl && messageInputRefEl && scrollContainer) {
       const inputHeight = messageInputRefEl.clientHeight;
       // Прокручиваем до конца, но не заходя на поле ввода
-      //const targetScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight - inputHeight - messagesEndRefEl.getBoundingClientRect().bottom;
-      //const targetScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight - (scrollContainer.scrollHeight - messagesEndRefEl.getBoundingClientRect().bottom);
-      
-      const targetScroll = messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight;
-      console.log(`___________________________`);
-      console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nscrollContainer.scrollHeight:`, scrollContainer.scrollHeight);
-      console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nscrollContainer.scrollHeight - messagesEndRefEl.getBoundingClientRect().bottom:`, scrollContainer.scrollHeight - messagesEndRefEl.getBoundingClientRect().bottom);
-      console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nscrollContainer.clientHeight:`, scrollContainer.clientHeight);
-      console.log(`MessageList/MessageList.tsx:\nscrollToBottom\ninputHeight:`, inputHeight);
-      console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nscrollContainer.getBoundingClientRect().top:`, scrollContainer.getBoundingClientRect().top);
-      console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nmessagesEndRefEl.getBoundingClientRect().top:`, messagesEndRefEl.getBoundingClientRect().top);
-      console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nmessagesEndRefEl.getBoundingClientRect().bottom:`, messagesEndRefEl.getBoundingClientRect().bottom);
-      console.log(`MessageList/MessageList.tsx:\nscrollToBottom\ntargetScroll:`, targetScroll);
+      //scrollContainer.clientHeight – высота контейнера с сообщениями (видимая часть в браузере)
+      //scrollContainer.scrollHeight – вся высота контейнера с сообщениями (выходит за границы экрана в браузере (сверху и снизу))
 
-      //const targetScroll = messagesEndRef.current?.offsetTop ?? 0;
-      //const targetScroll = messagesEndRef.current?.getBoundingClientRect().top ?? 0;
+      //inputHeight -- высота поля ввода
+
+      // messagesEndRefEl.getBoundingClientRect().bottom -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался наверху видимой части экрана
+      // messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана 
+      // messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана, и не перекрывался полем ввода, а был чуть выше его границы 
+      const targetScroll = messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight;
       
       scrollContainer.scrollBy({
         top: targetScroll,
         left: 0,
-
-        behavior: 'auto'
-
+        behavior: 'smooth'
       });
-
-
-      // Используем smooth behavior
-      //messagesEndRefEl.scrollIntoView({
-      //  block: 'end',
-      //  behavior: 'smooth'
-      //});
-
-      //setTimeout(() => {
-      //  // Корректируем позицию прокрутки, чтобы не перекрывать инпут
-      //  const scrollOffset = inputHeight;
-      //  console.log(`MessageList/MessageList.tsx:\nscrollToBottom\nscrollOffset:`, scrollOffset);
-      //
-      //  if(scrollContainer){
-      //    scrollContainer.scrollBy({
-      //      top: scrollOffset, 
-      //      left: 0, 
-      //      behavior: 'smooth'
-      //    });
-      //  }
-      //}, 1000); // Добавляем задержку 
-
     }
-    //setUserScrolled(false);
+    setuserScrolledUp(false);
   };
 
   return (
@@ -163,7 +164,8 @@ export const MessageList = () => {
         <div ref={messagesEndRef} className={styles.messagesEndRef}/>
       </>}
 
-      {MessagesForChatWithContext.newMessagesCount > 0 && (
+      {isLoading ? <></> : messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0 && 
+      (
         Array.from({ length: MessagesForChatWithContext.newMessagesCount }).map((_, index) => (
           <MessageBubble
             key={`empty-message-${index}`}
@@ -173,7 +175,13 @@ export const MessageList = () => {
             isLastInGroup={false}
           />
         ))
-      )}
+      )
+      }
+
+      {isLoading ? <></> : messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0 &&  (
+      <div ref={newMessagesEndRef} className={styles.messagesEndRef}/>
+      )
+      }
 
     
     </div>
@@ -184,7 +192,7 @@ export const MessageList = () => {
       <button 
         type="button"
         onClick={scrollToBottom} 
-        className={`${styles.scrollToBottomButton} ${userScrolled ? styles.Visible : styles.Hidden}`}
+        className={`${styles.scrollToBottomButton} ${userScrolledUp ? styles.Visible : styles.Hidden}`}
       >
         ↓
       </button>

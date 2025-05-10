@@ -8,9 +8,10 @@ import EmojiIcon from "../../assets/Emoji_Icon_React.svg";
 
 type MessageInputProps = {
   addMessage: (text: string) => void;
+  ref: React.RefObject<HTMLDivElement | null>;
 };
 
-const MessageInput = ({ addMessage }: MessageInputProps) => {
+const MessageInput = ({ addMessage, ref }: MessageInputProps) => {
   const [message, setMessage] = useState('');
   
   const handleSend = () => {
@@ -52,6 +53,7 @@ const MessageInput = ({ addMessage }: MessageInputProps) => {
 
   return (
     
+    <div ref={ref}>
     <Squircle 
       //cornerRadius={20}
       topLeftCornerRadius={20}//Левый верхний
@@ -97,7 +99,7 @@ const MessageInput = ({ addMessage }: MessageInputProps) => {
         >➚</button>
       </div>
     </Squircle>
-    
+    </div>
   );
 };
 

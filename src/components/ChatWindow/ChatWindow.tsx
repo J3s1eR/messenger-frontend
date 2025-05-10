@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { ChatHeader } from '../ChatHeader/ChatHeader';
 import { MessageList } from '../MessageList/MessageList';
@@ -169,8 +169,13 @@ export const ChatWindow = () => {
   */
 
   //const [messages, setMessages] = useState<{ id: number; text: string; isOwn: boolean; attachments?: string[]; timestamp: string }[]>([]);
+
+  const messageInputRef = useRef<HTMLDivElement | null>(null); // Ref для MessageInput
   
   const {activeChatUid, messages, sendMessage, fetchMessagesforChat } = useChatMessages();
+
+  
+
   //const [chatMessages, setChatMessages] = useState<any[]>([]);
   
   //useEffect(() => {
@@ -224,8 +229,8 @@ export const ChatWindow = () => {
       <ChatHeader />
       {/*<MessageList {/*messages={messages}/>*/}
       {/*<MessageList messages={chatMessages}/>*/}
-      <MessageList/>
-      <MessageInput addMessage={addMessage}/>
+      <MessageList messageInputRef={messageInputRef}/>
+      <MessageInput addMessage={addMessage} ref={messageInputRef}/>
     </div>
   );
 };
