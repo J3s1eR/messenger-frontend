@@ -6,13 +6,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { useAuth } from './AuthContext';
 
-import { debounce, get } from 'lodash';
+import { debounce} from 'lodash';
 
 interface Message {
   //receiverUid: string;
   sender: string;//senderUid
   num: string;//messageNumber
-  message: string;
+  message: string; // Предполагается, что это Base64-закодированная строка
   groupOu?: string;
 
   timestamp?: string;
@@ -31,16 +31,37 @@ interface User {
     isRegistered: boolean;
   }
 
+interface chatsInfo{
+  chats: chatInfo[];
+}
+
+interface chatInfo {
+    isGroup: boolean;
+    id: string;
+    name: string;
+    //lastMessageInfo: {
+    //  owner: string,
+    //  lastMessage: string // Предполагается, что это Base64-закодированная строка
+    //}
+    lastMessage: string; // Предполагается, что это Base64-закодированная строка
+    unread: number;
+    avatar: string;//для компонента chatList.tsx (не используется)
+    time: any;//для компонента chatList.tsx (не используется)
+  }
+
 interface MessageContextType {
   messages: Message[];
   MessagesForChatWithContext: MessagesForChatWithContext;
   sendMessage: (receiverUid: string, msg: string) => void;
   notifications: any[];
-  fetchChats: () => Promise<any>;
+  fetchChats: () => Promise<chatsInfo | undefined>;
+  currentChatsInfo: chatsInfo;
+
   fetchNewMessagesCountByUserUid: (uid: string | null) => Promise<number>;
   fetchUsers: () => Promise<User[]>;  // добавление метода для получения зарегистрированных пользователей
   fetchGroups: () => Promise<any>;
   fetchMessagesforChat: (uid: string | null, LoadNew: string, Count: number) => Promise<any>;
+  fetchNewMessagesforChatOutOfContext: (Count: number) => void;
   fetchMessagesForGroup: (ou: string | null) => Promise<any>;
 
   activeChatUid: string | null;  // Добавлено состояние для активного чата
@@ -55,6 +76,8 @@ const ChatMessageContext = createContext<MessageContextType | undefined>(undefin
 export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {getMyUid} = useAuth();
   const { user } = useAuth();
+
+  const [currentChatsInfo, setCurrentChatsInfo] = useState<chatsInfo>({chats: []});
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [MessagesForChatWithContext, setMessagesForChatWithContext] = useState<MessagesForChatWithContext>({
@@ -72,11 +95,34 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   
   // Объявляем функции сначала, чтобы использовать их в обработчиках (useCallback)
 
-  const fetchChats = async () => {
+  const fetchChats = async (): Promise<chatsInfo | undefined> => {
     if (!user) return;
     const res = await apiService.get('/message/chats');
     //return res.data;
-    return res.data.content; // Получаем только массив чатов
+    //return res.data.content; // Получаем только массив чатов
+
+    const data = res?.data.content;
+
+    if (!Array.isArray(data)) {
+      console.error('ChatMessagesContext.tsx:\nfetchChats:\nInvalid data format: Expected an array of chatInfo', data);
+      return undefined;
+    }
+    
+    const chats = await Promise.all(
+      data.map(async (chat: chatInfo) => {
+        const newMessagesCount = await fetchNewMessagesCountByUserUid(chat.id);
+        return {
+          ...chat,
+          //...chat.lastMessageInfo,
+          //lastMessage: decodeURIComponent(atob(chat.lastMessageInfo.lastMessage)), // Преобразуем из Base64 в строку 
+          lastMessage: decodeURIComponent(atob(chat.lastMessage)), // Преобразуем из Base64 в строку 
+          unread: newMessagesCount,
+        }
+      }
+    ));
+    setCurrentChatsInfo({ chats: chats})// Оборачиваем массив в объект типа chatsInfo
+    //console.warn('ChatMessagesContext.tsx:\nfetchChats:\ncurrentChatsInfo:', { chats: chats});
+    //return { chats };// Оборачиваем массив в объект типа chatsInfo
   };
 
   const fetchNewMessagesCountByUserUid = async (uid: string | null) => {
@@ -117,6 +163,14 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
         count = 0; // Значение по умолчанию
       }
       
+      //мы получили новое количество непрочитанных сообщений, нужно обновить состояние чатов
+      // Прямое обновление unread для конкретного чата //обновляем currentChatsInfo
+      setCurrentChatsInfo((prevState) => 
+      prevState 
+      ? { chats: prevState.chats.map((chat) => chat.id === uid ? { ...chat, unread: count } : chat) }
+      : prevState);
+
+
       console.log(`ChatMessagesContext.tsx:\nFinal count value:`, count, 'type:', typeof count);
       return count;
       
@@ -190,7 +244,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       decodedMessages = data
       .map((message: Message) => ({
         ...message,
-        message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку "new_ " + 
+        message: "new_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку "new_ " + 
       }))
       .filter((message: Message) => message.sender !== getMyUid());//показываем только сообщения собеседника, потому что мои сообщения уже есть в old
       }
@@ -198,7 +252,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       decodedMessages = data
       .map((message: { message: string }) => ({
         ...message,
-        message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку "old_ " + 
+        message: "old_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку "old_ " + 
       }))
       .reverse();
     }
@@ -262,25 +316,20 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     console.log("messageToShow:\n", messageToShow);
     webSocketService.sendMessage(messageToSend);
 
-    const count = await fetchNewMessagesCountByUserUid(receiverUid);
+    fetchChats();//обновляем currentChatsInfo
+    const count = await fetchNewMessagesCountByUserUid(receiverUid);//можно заменить на считывание из currentchatsInfo для конкретного чата (TO-DO)
+
     if (count > 0){
       await fetchMessagesforChat(activeChatUid, "new", count);//подгружаем все новые сообщения
       console.warn(`sendMessage`);
-      setMessages((prev) => [...prev, messageToShow]); // оптимистичное обновление
+    }
+
+    setMessages((prev) => [...prev, messageToShow]); // оптимистичное обновление
       setMessagesForChatWithContext(prev => ({
         messages: [...prev.messages, messageToShow],
         //newMessagesCount: prev.newMessagesCount
         newMessagesCount: 0//после отправки сообщения, прочитаются все непрочитанные
       }));
-    }
-    else if (count === 0){
-      setMessages((prev) => [...prev, messageToShow]); // оптимистичное обновление
-      setMessagesForChatWithContext(prev => ({
-        messages: [...prev.messages, messageToShow],
-        //newMessagesCount: prev.newMessagesCount
-        newMessagesCount: 0//после отправки сообщения, прочитаются все непрочитанные
-      }));
-    }
   };
 
   const debouncedFetchMessagesforChat = useRef(
@@ -289,12 +338,18 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, 1000)
   ).current;
 
+  const fetchNewMessagesforChatOutOfContext  = async (Count: number = 1) => {
+    fetchMessagesforChat(activeChatUidRef.current, "new", Count);
+
+  };
+
   // Создаем обработчики, которые используют activeChatUidRef вместо значения из замыкания
   const handleNotification = useCallback((notif: any) => {//когда приходит сообщение от кого-то
     console.log("NEW NOTIFICATION\nnotif:\n", notif);
     console.log("Current activeChatUid in notification handler:", activeChatUidRef.current);
     
     setNotifications((prev) => [...prev, notif]);
+    fetchChats();//обновляем currentChatsInfo
     
     // Используем ref вместо переменной из замыкания
     if (activeChatUidRef.current && notif.sender === activeChatUidRef.current) {
@@ -404,12 +459,14 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
         messages, 
         MessagesForChatWithContext,
         sendMessage, 
-        notifications, 
+        notifications,
+        currentChatsInfo,
         fetchChats, 
         fetchNewMessagesCountByUserUid,
         fetchUsers, 
         fetchGroups, 
         fetchMessagesforChat, 
+        fetchNewMessagesforChatOutOfContext, 
         fetchMessagesForGroup,
 
         users,

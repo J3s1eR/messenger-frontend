@@ -1,7 +1,7 @@
 import { Squircle } from '../ultimate-squircle/squircle-js';
 import styles from './ChatList.module.css';
 import  UserAvatar  from '../UserAvatar/UserAvatar';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo} from 'react';
 
 import { CustomScrollbar } from '../CustomScrollbar/CustomScrollbar';
 
@@ -137,8 +137,11 @@ export const ChatList = () => {
   const {activeChatUid, setActiveChatUid} = useChatMessages();
   const {getMyUid} = useAuth();
 
-  const { fetchChats, users, fetchUsers, notifications, isLoading, fetchNewMessagesCountByUserUid} = useChatMessages();
-  const [chats, setChats] = useState<any[]>([]);
+  const {currentChatsInfo, fetchChats, users, fetchUsers, notifications, isLoading, fetchNewMessagesCountByUserUid} = useChatMessages();
+  //const [chats, setChats] = useState<any[]>([]);
+
+  // Мемоизация текущих чатов
+  const memoizedChats = useMemo(() => currentChatsInfo.chats, [currentChatsInfo]);
 
   // Добавляем эффект для обновления счетчика непрочитанных сообщений при получении уведомлений
   //useEffect(() => {
@@ -161,40 +164,45 @@ export const ChatList = () => {
   //}, [notifications, chats, activeChatUid]);
 
   useEffect(() => {
-    const loadChatsAndUsers = async () => {
-      try {
-        const fetchedChats = await fetchChats();
-        if (fetchedChats && Array.isArray(fetchedChats)) {
-          
-          // Получаем количество новых сообщений для каждого чата
-          for (const chat of fetchedChats) {
-            if (chat && chat.id) {
-              try {
-                console.log('chatList.tsx:\nFetching new messages for:', chat.id);
-                const newMessagesCount = await fetchNewMessagesCountByUserUid(chat.id);
-                console.log('chatList.tsx:\nChat:', chat.id, '\nNew messages count value:', newMessagesCount, 'type:', typeof newMessagesCount);
-                chat.unread = Number(newMessagesCount);
-              } catch (err) {
-                console.error('chatList.tsx:\nError getting message count for chat', chat.id, err);
-                chat.unread = 0;
-              }
-            }
-          }
-          setChats(fetchedChats);//Обновляем список чатов только после получения количества сообщений
-        } else {
-          console.warn('fetchChats returned invalid data:', fetchedChats);
-          setChats([]);
-        }
-        
-        // Загружаем список пользователей
-        fetchUsers();
-      } catch (error) {
-        console.error('Error loading chats and users:', error);
-      }
-    };
+    //const loadChatsAndUsers = async () => {
+    //  try {
+    //    const fetchedChats = await fetchChats();
+    //    if (fetchedChats && Array.isArray(fetchedChats)) {
+    //      
+    //      // Получаем количество новых сообщений для каждого чата
+    //      for (const chat of fetchedChats) {
+    //        if (chat && chat.id) {
+    //          try {
+    //            console.log('chatList.tsx:\nFetching new messages for:', chat.id);
+    //            const newMessagesCount = await fetchNewMessagesCountByUserUid(chat.id);
+    //            console.log('chatList.tsx:\nChat:', chat.id, '\nNew messages count value:', newMessagesCount, 'type:', typeof newMessagesCount);
+    //            chat.unread = Number(newMessagesCount);
+    //          } catch (err) {
+    //            console.error('chatList.tsx:\nError getting message count for chat', chat.id, err);
+    //            chat.unread = 0;
+    //          }
+    //        }
+    //      }
+    //      setChats(fetchedChats);//Обновляем список чатов только после получения количества сообщений
+    //    } else {
+    //      console.warn('fetchChats returned invalid data:', fetchedChats);
+    //      setChats([]);
+    //    }
+    //    
+    //    // Загружаем список пользователей
+    //    fetchUsers();
+    //  } catch (error) {
+    //    console.error('Error loading chats and users:', error);
+    //  }
+    //};
     
-    loadChatsAndUsers();
-  }, [fetchChats]);
+    //loadChatsAndUsers();
+    fetchChats();
+    fetchUsers();
+    //console.log('chatList.tsx:\ncurrentChatsInfo:', currentChatsInfo);
+  }, []);
+
+  //}, [fetchChats]);currentChatsInfo handleNotification memoizedChats
 
   /*
   // Состояние для хранения ID открытого чата
@@ -322,8 +330,8 @@ export const ChatList = () => {
       )}
 
       {/*список существующих чатов*/}
-      {Array.isArray(chats) && chats.length > 0 ? (
-        chats.map(chat => (
+      {Array.isArray(currentChatsInfo?.chats) && currentChatsInfo?.chats.length > 0 ? (
+        currentChatsInfo.chats.map(chat => (
           
         <Squircle
         //key={chat.id}
@@ -374,7 +382,7 @@ export const ChatList = () => {
 
           <div className={styles.avatar}>
           <UserAvatar 
-            src = {chat.avatar} 
+            src = {chat?.avatar} 
             alt = {chat.name} 
             defaultWidth = {64} 
             defaultHeight = {64} 
@@ -407,7 +415,7 @@ export const ChatList = () => {
           {/* Дополнительное содержимое при открытии (Не используется)*/}
           {/*openedChatId */}
           {/*activeChatId === chat.id && (*/}
-          {activeChatUid === chat.Uid && (
+          {activeChatUid === chat.id && (
               <div className={styles.openedChat}>
                 {/* <p>Это дополнительная информация о чате с {chat.name}.</p>
                 <p>Здесь могут быть детали или действия.</p> */}

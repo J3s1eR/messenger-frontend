@@ -14,7 +14,7 @@ type MessageListProps ={
 //export const MessageList = ({ messages }: MessageListProps) => {
 export const MessageList = ({messageInputRef}: MessageListProps) => {
 
-  const {messages, MessagesForChatWithContext, isLoading} = useChatMessages();
+  const {messages, MessagesForChatWithContext, isLoading, fetchNewMessagesforChatOutOfContext} = useChatMessages();
   const {getMyUid} = useAuth();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,39 +35,39 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
     const newMessagesEndRefEl = newMessagesEndRef.current;
     const messageInputRefEl = messageInputRef.current;
 
+    if(!messagesEndRefEl || !messageInputRefEl || !scrollContainer || !newMessagesEndRefEl) return;
+    
     const { scrollTop, scrollHeight, clientHeight } = target;
     //console.log(`MessageList.tsx:\handleScroll():\nscrollTop:`, scrollTop, `\nscrollHeight:`, scrollHeight, `\nclientHeight:`, clientHeight);
-
-    if(messagesEndRefEl && messageInputRefEl && scrollContainer && newMessagesEndRefEl) {
-      const inputHeight = messageInputRefEl.clientHeight;
-      //console.log(`MessageList.tsx:\handleScroll():\nmessagesEndRefEl:`, messagesEndRefEl)
-      //console.log(`MessageList.tsx:\handleScroll():\nmessageInputRefEl:`, messageInputRefEl)
-
-      // messagesEndRefEl.getBoundingClientRect().bottom -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался наверху видимой части экрана
-      // messagesEndRefEl.getBoundingClientRect().bottom - clientHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана 
-      // messagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана, и не перекрывался полем ввода, а был чуть выше его границы 
-      const diff = messagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight;
-      const isAtBottom = diff < 100;
-      console.log(`MessageList.tsx:\handleScroll():\ndiff:`, diff, `\nisAtBottom:`, isAtBottom);
       
-      //const isAtBottom = scrollHeight - scrollTop - clientHeight < 100; // в пределах 100px от нижней границы
-      
-      //console.log(`MessageList.tsx:\handleScroll():\nsetuserScrolledUp(`, !isAtBottom, `)`)
-      //console.log(`MessageList.tsx:\handleScroll():\nscrollHeight:`, scrollHeight, `\nscrollTop:`, scrollTop, `\nclientHeight:`, clientHeight, `\nisAtBottom:`, isAtBottom);
-      
-      setuserScrolledUp(!isAtBottom);
+    const inputHeight = messageInputRefEl.clientHeight;
+    //console.log(`MessageList.tsx:\handleScroll():\nmessagesEndRefEl:`, messagesEndRefEl)
+    //console.log(`MessageList.tsx:\handleScroll():\nmessageInputRefEl:`, messageInputRefEl)
+    
+    // messagesEndRefEl.getBoundingClientRect().bottom -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался наверху видимой части экрана
+    // messagesEndRefEl.getBoundingClientRect().bottom - clientHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана 
+    // messagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана, и не перекрывался полем ввода, а был чуть выше его границы 
+    const diff = messagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight;
+    const isAtBottom = diff < 100;
+    console.log(`MessageList.tsx:\handleScroll():\ndiff:`, diff, `\nisAtBottom:`, isAtBottom);
+    
+    //const isAtBottom = scrollHeight - scrollTop - clientHeight < 100; // в пределах 100px от нижней границы
+    
+    //console.log(`MessageList.tsx:\handleScroll():\nsetuserScrolledUp(`, !isAtBottom, `)`)
+    //console.log(`MessageList.tsx:\handleScroll():\nscrollHeight:`, scrollHeight, `\nscrollTop:`, scrollTop, `\nclientHeight:`, clientHeight, `\nisAtBottom:`, isAtBottom);
+    
+    setuserScrolledUp(!isAtBottom);
+
+    //после прокрутки старых сообщений, проверяем, можно ли прочитать все новые сообщения разом, или пользователь промотал их до конца
+    const diff2 = newMessagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight;
+    const canReadAllNewMessages = diff2 > 10;  
+    console.log(`MessageList.tsx:\handleScroll():\ndiff2:`, diff2, `\ncanReadAllNewMessages:`, canReadAllNewMessages);
+
+    setCanReadNewMessages(canReadAllNewMessages);
 
 
-      //после прокрутки старых сообщений, проверяем, можно ли прочитать все новые сообщения разом, или пользователь промотал их до конца
-      const diff2 = newMessagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight;
-      const canReadAllNewMessages = diff2 > 10;  
-      console.log(`MessageList.tsx:\handleScroll():\ndiff2:`, diff2, `\ncanReadAllNewMessages:`, canReadAllNewMessages);
 
-      setCanReadNewMessages(canReadAllNewMessages);
-
-
-
-    }
+    
   };
 
   useEffect(() => {
@@ -78,13 +78,25 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
     if ((messages.length > prevMessagesLength.current || prevMessagesLength.current === 0) && !userScrolledUp) {
       // Найдем scrollable контейнер (это .content внутри CustomScrollbar)
       const scrollContainer = messagesEndRef.current?.parentElement?.parentElement;
-      if (scrollContainer) {
-      // Прокручиваем до конца, но не заходя на поле ввода
-        const targetScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+      const messagesEndRefEl = messagesEndRef.current;
+      const messageInputRefEl = messageInputRef.current;
+
+      if (messagesEndRefEl && messageInputRefEl && scrollContainer) {
+        const inputHeight = messageInputRefEl.clientHeight;
+        // Прокручиваем до конца, но не заходя на поле ввода
+        //scrollContainer.clientHeight – высота контейнера с сообщениями (видимая часть в браузере)
+        //scrollContainer.scrollHeight – вся высота контейнера с сообщениями (выходит за границы экрана в браузере (сверху и снизу))
         
-        // Используем smooth behavior
-        scrollContainer.scrollTo({
+        //inputHeight -- высота поля ввода
+        
+        // messagesEndRefEl.getBoundingClientRect().bottom -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался наверху видимой части экрана
+        // messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана 
+        // messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана, и не перекрывался полем ввода, а был чуть выше его границы 
+        const targetScroll = messagesEndRefEl.getBoundingClientRect().bottom - scrollContainer.clientHeight + inputHeight;
+
+        scrollContainer.scrollBy({
           top: targetScroll,
+          left: 0,
           behavior: 'smooth'
         });
       }
@@ -137,6 +149,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
         });
       }
       setCanReadNewMessages(false);
+      fetchNewMessagesforChatOutOfContext(MessagesForChatWithContext.newMessagesCount);//при клике на кнопку подгружаются ВСЕ новые сообщения
     }
   };
 
@@ -209,6 +222,8 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
             <div className={`${styles.Count} ${MessagesForChatWithContext.newMessagesCount > 0 ? canReadNewMessages ? styles.Visible : styles.Hidden : styles.Hidden}`}>
               {MessagesForChatWithContext.newMessagesCount}
             </div>
+            
+
         {/**/}
         
         <button 
