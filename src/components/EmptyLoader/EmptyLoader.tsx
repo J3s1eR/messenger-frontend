@@ -35,5 +35,5 @@ export const EmptyLoader: React.FC<EmptyLoaderProps> = ({
     threshold,
   });
 
-  return <div ref={loaderRef} style={{ height: '10px' }} />;
+  return <div ref={loaderRef} style={{ height: '1px' }} />;
 };

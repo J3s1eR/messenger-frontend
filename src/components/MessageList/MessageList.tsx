@@ -196,35 +196,37 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
       }
       )}
 
-      {isLoading ? <></> : messages.length !== 0 &&  <>
+      {isLoading ? <></> : ((messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0) &&
+      <>
         <div className={styles.OldNewMessagesDeviderContainer}> 
           <div className={styles.OldNewMessagesDeviderLine}></div>
             <div className={styles.OldNewMessagesDeviderContent}>Новые сообщения ({MessagesForChatWithContext.newMessagesCount})</div>
           <div className={styles.OldNewMessagesDeviderLine}></div>
         </div>
         
-        <div ref={messagesEndRef} className={styles.messagesEndRef}/>
-      </>}
+        
+      </>)
+      }
+      
+      <div ref={messagesEndRef} className={styles.messagesEndRef}/>
 
       {isLoading ? <></> : messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0 && 
       (
+        //инвертированный список, потому что сообщения-заглушки пропадают с конца, а не с начала
+        //и если не инвертировать, то с каждым разом придется прокручивать на +1 сообщение больше, чтобы прочитать всего лишь 1 новое сообщение
+        //либо можно не инвертировать, но тогда нужно установить в EmptyLoader флаг callOnlyOnce в false, чтобы один и тот же реф в EmptyLoader позволял отслеживать появление на экране много раз
         Array.from({ length: MessagesForChatWithContext.newMessagesCount }).map((_, index) => {
           const reversedIndex = MessagesForChatWithContext.newMessagesCount - 1 - index;
           return (
             <React.Fragment key={`empty-message-fragment-${reversedIndex}`}>
               <MessageBubble
                 key={`empty-message-${reversedIndex}`}
-                text={`
-                  
-                  ${reversedIndex}
-                  
-                  `}
+                text={``}
                 isOwn={false}
                 isFirstInGroup={false}
                 isLastInGroup={false}
               />
               <EmptyLoader 
-                //key={`empty-message-loader-${index}`}
                 onVisible={() => fetchNewMessagesforChatOutOfContext(1)}
                 rootMargin={inputHeightMargin} 
                 threshold={1.0}
