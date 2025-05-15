@@ -7,6 +7,7 @@ import { API_URL } from '../../config/apiConfig.private';
 // Хранилище токена
 let token: string | null = null;
 let Myuid: string | null = null;
+let MyName: string | null = null;
 
 // Приватная функция для получения заголовков авторизации
 const getAuthHeaders = () => (token ? { Authorization: `Bearer ${token}` } : {});
@@ -26,6 +27,11 @@ export const apiService = {
   getToken: () => token,
 
   getMyUid: () => Myuid,
+
+  setMyName: (name: string) => (MyName = name),
+
+  getMyName: () => MyName,
+
 
   //Универсальный get запрос
   get: async (endpoint: string) => {

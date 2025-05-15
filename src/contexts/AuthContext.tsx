@@ -8,6 +8,9 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   getMyUid: () => string | null;
+  setMyName: (newName: string) => void;
+  getMyName: () => string | null;
+  
 }
 
 interface AuthProviderProps {
@@ -68,8 +71,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return apiService.getMyUid()
   };
 
+  const getMyName = () => {
+    return apiService.getMyName()
+  };
+
+  const setMyName = (name: string) => {
+    apiService.setMyName(name)
+  };
+
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, getMyUid}}>
+    <AuthContext.Provider value={{ user, login, logout, getMyUid, getMyName, setMyName}}>
       {children}
     </AuthContext.Provider>
   );

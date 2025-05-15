@@ -43,10 +43,11 @@ interface chatInfo {
     //  owner: string,
     //  lastMessage: string // Предполагается, что это Base64-закодированная строка
     //}
+    sender: string; // кто отправил последнее сообщение
     lastMessage: string; // Предполагается, что это Base64-закодированная строка
     unread: number;
-    avatar: string;//для компонента chatList.tsx (не используется)
-    time: any;//для компонента chatList.tsx (не используется)
+    avatar: string; //для компонента chatList.tsx (не используется)
+    time: Date; // время отправки последнего сообщения
   }
 
 interface MessageContextType {
@@ -74,7 +75,7 @@ interface MessageContextType {
 const ChatMessageContext = createContext<MessageContextType | undefined>(undefined);
 
 export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const {getMyUid} = useAuth();
+  const {getMyUid, setMyName, getMyName} = useAuth();
   const { user } = useAuth();
 
   const [currentChatsInfo, setCurrentChatsInfo] = useState<chatsInfo>({chats: []});
@@ -111,12 +112,15 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const chats = await Promise.all(
       data.map(async (chat: chatInfo) => {
         const newMessagesCount = await fetchNewMessagesCountByUserUid(chat.id);
+
         return {
           ...chat,
           //...chat.lastMessageInfo,
           //lastMessage: decodeURIComponent(atob(chat.lastMessageInfo.lastMessage)), // Преобразуем из Base64 в строку 
           lastMessage: decodeURIComponent(atob(chat.lastMessage)), // Преобразуем из Base64 в строку 
           unread: newMessagesCount,
+          time: new Date(chat.time), // Преобразуем строку времени в объект Date
+          sender: chat.sender === getMyName() ? 'Вы' : chat.sender,//надеюсь имя заменить на uid(id)
         }
       }
     ));
@@ -185,6 +189,15 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!user) return;
     const res = await apiService.get('/user');
     const registeredUsers = res.data.content.filter((user: { isRegistered: boolean }) => user.isRegistered);//список зарегестрированных пользователей
+    
+    for (let i = 0; i < registeredUsers.length; i++) {
+      const user = registeredUsers[i];
+        //Временное!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! надеюсь
+        if ( user.uid === getMyUid() ) {
+          setMyName(user.name);
+        };
+    }
+
     setUsers(registeredUsers);  // Обновляем состояние пользователей
     return registeredUsers;
   };

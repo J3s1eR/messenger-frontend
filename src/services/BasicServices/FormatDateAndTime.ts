@@ -1,5 +1,5 @@
 
-const FormatDateAndTime = {
+export const FormatDateAndTime = {
     /**
      * Formats the time in "HH:mm" format.
      * @param date - The date object to format.
@@ -47,5 +47,3 @@ const FormatDateAndTime = {
         return `${day}.${month}.${year}`;
     },
 };
-
-export default FormatDateAndTime;

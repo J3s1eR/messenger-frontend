@@ -9,6 +9,9 @@ import { useChatMessages } from '../../contexts/ChatMessagesContext'; // Имп�
 
 import { useAuth } from '../../contexts/AuthContext';
 
+import { FormatDateAndTime } from '../../services/BasicServices/FormatDateAndTime';
+
+
 /*
 const chats = [
   {
@@ -142,6 +145,8 @@ export const ChatList = () => {
 
   // Мемоизация текущих чатов
   const memoizedChats = useMemo(() => currentChatsInfo.chats, [currentChatsInfo]);
+
+  const [timeIsHovered, setTimeIsHovered] = useState(false);
 
   // Добавляем эффект для обновления счетчика непрочитанных сообщений при получении уведомлений
   //useEffect(() => {
@@ -398,13 +403,20 @@ export const ChatList = () => {
               </div>
             
               <div className={styles.message}>
-              {chat.lastMessage}
+              {chat.sender}: {chat.lastMessage}
               </div>
             </div>
             
             {/* Дополнительная информация */}
             <div className={styles.second_info}>
-              <span className={styles.time}>{chat.time}</span>
+              <span 
+                className={styles.time}
+                onMouseEnter={() => setTimeIsHovered(true)}
+                onMouseLeave={() => setTimeIsHovered(false)}
+              >
+                {timeIsHovered ? FormatDateAndTime.formatDate_FullDate(chat.time)
+                : FormatDateAndTime.formatTime_HourAndMinute(chat.time)}
+              </span>
               {/*условный рендеринг*/}
               {chat.unread > 0 && (<span className={styles.badge}>{chat.unread}</span>)}
               <span></span>
