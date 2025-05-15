@@ -7,6 +7,8 @@ import { CustomScrollbar } from '../CustomScrollbar/CustomScrollbar';
 import { useChatMessages } from '../../contexts/ChatMessagesContext';
 import { useAuth } from '../../contexts/AuthContext';
 
+import { EmptyLoader } from '../EmptyLoader/EmptyLoader';
+
 type MessageListProps ={
   messageInputRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -24,6 +26,17 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
   const [userScrolledUp, setuserScrolledUp] = useState(false);
   const [canReadNewMessages, setCanReadNewMessages] = useState(false);
   const prevMessagesLength = useRef(0);
+
+  const [inputHeightMargin, setInputHeightMargin] = useState<string>('0px 0px 0px 0px'); // запасное значение
+
+  useEffect(() => {
+    const el = messageInputRef.current;
+    if (el) {
+      const height = el.clientHeight;
+      setInputHeightMargin(`0px 0px -${height}px 0px`);
+      console.log(`MessageList.tsx:\hsetInputHeightMargin():\n`, `0px 0px -${height}px 0px`);
+    }
+  }, [messageInputRef.current]);
 
   // Отслеживаем прокрутку пользователем
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
@@ -49,7 +62,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
     // messagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight -- сколько осталось прокрутить, чтобы messagesEndRefEl оказался внизу видимой части экрана, и не перекрывался полем ввода, а был чуть выше его границы 
     const diff = messagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight;
     const isAtBottom = diff < 100;
-    console.log(`MessageList.tsx:\handleScroll():\ndiff:`, diff, `\nisAtBottom:`, isAtBottom);
+    //console.log(`MessageList.tsx:\handleScroll():\ndiff:`, diff, `\nisAtBottom:`, isAtBottom);
     
     //const isAtBottom = scrollHeight - scrollTop - clientHeight < 100; // в пределах 100px от нижней границы
     
@@ -61,7 +74,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
     //после прокрутки старых сообщений, проверяем, можно ли прочитать все новые сообщения разом, или пользователь промотал их до конца
     const diff2 = newMessagesEndRefEl.getBoundingClientRect().bottom - clientHeight + inputHeight;
     const canReadAllNewMessages = diff2 > 10;  
-    console.log(`MessageList.tsx:\handleScroll():\ndiff2:`, diff2, `\ncanReadAllNewMessages:`, canReadAllNewMessages);
+    //console.log(`MessageList.tsx:\handleScroll():\ndiff2:`, diff2, `\ncanReadAllNewMessages:`, canReadAllNewMessages);
 
     setCanReadNewMessages(canReadAllNewMessages);
 
@@ -196,13 +209,22 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
       {isLoading ? <></> : messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0 && 
       (
         Array.from({ length: MessagesForChatWithContext.newMessagesCount }).map((_, index) => (
-          <MessageBubble
-            key={`empty-message-${index}`}
-            text=""
-            isOwn={false}
-            isFirstInGroup={false}
-            isLastInGroup={false}
-          />
+          <React.Fragment key={`empty-message-fragment-${index}`}>
+            <MessageBubble
+              key={`empty-message-${index}`}
+              text="
+              
+              "
+              isOwn={false}
+              isFirstInGroup={false}
+              isLastInGroup={false}
+            />
+            <EmptyLoader 
+              onVisible={() => fetchNewMessagesforChatOutOfContext(1)}
+              rootMargin={inputHeightMargin} 
+              threshold={1.0}
+            />
+          </React.Fragment>
         ))
       )
       }
