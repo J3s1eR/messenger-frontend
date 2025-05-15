@@ -208,24 +208,31 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
 
       {isLoading ? <></> : messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0 && 
       (
-        Array.from({ length: MessagesForChatWithContext.newMessagesCount }).map((_, index) => (
-          <React.Fragment key={`empty-message-fragment-${index}`}>
-            <MessageBubble
-              key={`empty-message-${index}`}
-              text="
-              
-              "
-              isOwn={false}
-              isFirstInGroup={false}
-              isLastInGroup={false}
-            />
-            <EmptyLoader 
-              onVisible={() => fetchNewMessagesforChatOutOfContext(1)}
-              rootMargin={inputHeightMargin} 
-              threshold={1.0}
-            />
-          </React.Fragment>
-        ))
+        Array.from({ length: MessagesForChatWithContext.newMessagesCount }).map((_, index) => {
+          const reversedIndex = MessagesForChatWithContext.newMessagesCount - 1 - index;
+          return (
+            <React.Fragment key={`empty-message-fragment-${reversedIndex}`}>
+              <MessageBubble
+                key={`empty-message-${reversedIndex}`}
+                text={`
+                  
+                  ${reversedIndex}
+                  
+                  `}
+                isOwn={false}
+                isFirstInGroup={false}
+                isLastInGroup={false}
+              />
+              <EmptyLoader 
+                //key={`empty-message-loader-${index}`}
+                onVisible={() => fetchNewMessagesforChatOutOfContext(1)}
+                rootMargin={inputHeightMargin} 
+                threshold={1.0}
+                callOnlyOnce={true}
+              />
+            </React.Fragment>
+          );
+        })
       )
       }
 
