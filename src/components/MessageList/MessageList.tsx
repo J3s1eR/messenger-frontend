@@ -233,7 +233,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
                 isOwn={message.isOwn}
                 attachments={message.attachments}*/
                 key={message.num}
-                text={"\t" + message.num + " | " + message.message}
+                text={message.message} //"\t" + message.num + " | " +  
                 isOwn={isOwn}
                 isFirstInGroup={isFirstInGroup}
                 isLastInGroup={isLastInGroup}

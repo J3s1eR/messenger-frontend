@@ -290,7 +290,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .map((message: Message) => ({
         ...message,
         isReaded: false,
-        message: message.num + " _new_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку | "new_ " + | message.num + " _new_ " +  
+        message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку | "new_ " + | message.num + " _new_ " +  
       }))
       .filter((message: Message) => {//во время фильтрации сохраняем номера для непрочитанных сообщений //мои сообщения есть в old, но если они же есть в new - это значит их еще не прочитали
         const isUnique = !MessagesForChatWithContext.newMessages.some(
@@ -325,7 +325,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .map((message: Message) => ({
         ...message,
         isReaded: true,
-        message: message.num + " _old_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку | "old_ " + | message.num + " _old_ " + 
+        message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку | "old_ " + | message.num + " _old_ " + 
       }))
       .reverse();
     }
