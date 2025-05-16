@@ -16,7 +16,7 @@ type MessageListProps ={
 //export const MessageList = ({ messages }: MessageListProps) => {
 export const MessageList = ({messageInputRef}: MessageListProps) => {
 
-  const {messages, MessagesForChatWithContext, isLoading, fetchNewMessagesforChatOutOfContext} = useChatMessages();
+  const {messages, MessagesForChatWithContext, isLoading, fetchNewMessagesforChatOutOfContext, markMessagesAsReadByLastReadedMessageNumOutOfContext} = useChatMessages();
   const {getMyUid} = useAuth();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -162,7 +162,8 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
         });
       }
       setCanReadNewMessages(false);
-      fetchNewMessagesforChatOutOfContext(MessagesForChatWithContext.newMessagesCount);//при клике на кнопку подгружаются ВСЕ новые сообщения
+      //fetchNewMessagesforChatOutOfContext(MessagesForChatWithContext.newMessagesCount);//при клике на кнопку подгружаются ВСЕ новые сообщения
+      markMessagesAsReadByLastReadedMessageNumOutOfContext(MessagesForChatWithContext.newMessages[MessagesForChatWithContext.newMessages.length - 1].num)//при клике на кнопку подгружаются ВСЕ новые сообщения
     }
   };
 
@@ -172,7 +173,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
       
       {isLoading ? <div className={styles.EmptyChatList}>Загрузка...</div> : messages.length === 0 && <div className={styles.EmptyChatList}>Сообщений нет</div>}
 
-      {messages.map((message, index)  => {
+      {MessagesForChatWithContext.messages.map((message, index)  => {
         const currentSender = message.sender;
         const prevSender = index > 0 ? messages[index - 1].sender : null;
         const nextSender = index < messages.length - 1 ? messages[index + 1].sender : null;
@@ -210,7 +211,56 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
       
       <div ref={messagesEndRef} className={styles.messagesEndRef}/>
 
-      {isLoading ? <></> : messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0 && 
+
+      {/*//инвертированный список, потому что new-сообщения пропадают с конца, а не с начала*/}
+      {/*////и если не инвертировать, то с каждым разом придется прокручивать на +1 сообщение больше, чтобы прочитать всего лишь 1 новое сообщение*/}
+      {/*////либо можно не инвертировать, но тогда нужно установить в EmptyLoader флаг callOnlyOnce в false, чтобы один и тот же реф в EmptyLoader позволял отслеживать появление на экране много раз*/}
+      {/*////и флаг useLatestOnVisible в true, чтобы использовать актуальную версию onVisible (с актуальным message.num)*/}
+      {MessagesForChatWithContext.newMessages.map((message, index)  => {
+        const currentSender = message.sender;
+        const prevSender = index > 0 ? messages[index - 1].sender : null;
+        const nextSender = index < messages.length - 1 ? messages[index + 1].sender : null;
+      
+        const isFirstInGroup = currentSender !== prevSender;
+        const isLastInGroup = currentSender !== nextSender;
+        const isOwn = message.sender === getMyUid() ? true : false;
+        return(
+            <React.Fragment key={`new-message-fragment-${index}`}>
+              <MessageBubble 
+                /*key={message.id}
+                text={message.text}
+                isOwn={message.isOwn}
+                attachments={message.attachments}*/
+                key={message.num}
+                text={"\t" + message.num + " | " + message.message}
+                isOwn={isOwn}
+                isFirstInGroup={isFirstInGroup}
+                isLastInGroup={isLastInGroup} 
+                //attachments={message.attachments} //пока нет поддержки
+              />
+              <EmptyLoader 
+                onVisible={() =>{console.log("MARK AS READ:", message.num); markMessagesAsReadByLastReadedMessageNumOutOfContext(message.num)}}
+                rootMargin={inputHeightMargin} 
+                threshold={1.0}
+                callOnlyOnce={false}
+                useLatestOnVisible={true}//используем актуальную версию onVisible (с актуальным message.num)
+
+              />
+            </React.Fragment>
+          );
+      }
+      )}
+
+
+
+
+
+
+
+
+
+
+      {/*isLoading ? <></> : messages.length !== 0 && MessagesForChatWithContext.newMessagesCount > 0 && 
       (
         //инвертированный список, потому что сообщения-заглушки пропадают с конца, а не с начала
         //и если не инвертировать, то с каждым разом придется прокручивать на +1 сообщение больше, чтобы прочитать всего лишь 1 новое сообщение
@@ -236,7 +286,12 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
           );
         })
       )
-      }
+      */}
+
+
+
+
+
 
       {isLoading ? <></> : messages.length !== 0 &&  (
       <div ref={newMessagesEndRef} className={styles.messagesEndRef}/>

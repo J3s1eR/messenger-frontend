@@ -18,11 +18,14 @@ interface Message {
   timestamp?: string;
 
   payload?: string;
+
+  isReaded: boolean;
 }
 
 interface MessagesForChatWithContext{
   messages: Message[];
   newMessagesCount: number;
+  newMessages: Message[];
 }
 
 interface User {
@@ -63,6 +66,9 @@ interface MessageContextType {
   fetchGroups: () => Promise<any>;
   fetchMessagesforChat: (uid: string | null, LoadNew: string, Count: number) => Promise<any>;
   fetchNewMessagesforChatOutOfContext: (Count: number) => void;
+  markMessagesAsReadByLastReadedMessageNumOutOfContext: (messageNum: string) => void;
+
+
   fetchMessagesForGroup: (ou: string | null) => Promise<any>;
 
   activeChatUid: string | null;  // Добавлено состояние для активного чата
@@ -83,7 +89,8 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [messages, setMessages] = useState<Message[]>([]);
   const [MessagesForChatWithContext, setMessagesForChatWithContext] = useState<MessagesForChatWithContext>({
     messages: [],
-    newMessagesCount: 0
+    newMessagesCount: 0,
+    newMessages: [],
   });
   const [notifications, setNotifications] = useState<any[]>([]);
   const [users, setUsers] = useState<User[]>([]);  // состояние для пользователей
@@ -175,6 +182,13 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       : prevState);
 
 
+      setMessagesForChatWithContext(prev => ({
+        messages: [...prev.messages],
+        newMessagesCount: count,
+        newMessages: [...prev.newMessages],
+      }));
+
+
       console.log(`ChatMessagesContext.tsx:\nFinal count value:`, count, 'type:', typeof count);
       return count;
       
@@ -232,9 +246,11 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const fetchMessagesforChat = async (uid: string | null, LoadNew: string = "old", Count: number = 100) => {
     if (!user || !webSocketService.isconnected()) return [];
-    if (!uid){
-      return [];
-    }
+    if (!uid) return [];
+    if(Count <= 0) return [];
+
+    console.log(`ChatMessagesContext.tsx: \n fetchMessagesforChat(): \n uid: ${uid} \n LoadNew: ${LoadNew} \n Count: ${Count}\n`);
+
     let res;
     if(LoadNew === "new"){
       res = await apiService.get(`/message/user/${uid}/new/?page=0&size=${Count}`);
@@ -249,7 +265,10 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     //setMessages(res.data.content);
     const data = res?.data.content;
     
-    // Преобразуем каждый message из Base64 в строку
+
+    //const existingMessageNums = new Set(
+    //  MessagesForChatWithContext.newMessages.map((m) => m.num)
+    //);
 
     //ТЕСТ
     let decodedMessages: Message[] = [];
@@ -257,15 +276,21 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       decodedMessages = data
       .map((message: Message) => ({
         ...message,
-        message: "new_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку "new_ " + 
+        isReaded: false,
+        message: message.num + " _new_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку | "new_ " + | message.num + " _new_ " +  
       }))
-      .filter((message: Message) => message.sender !== getMyUid());//показываем только сообщения собеседника, потому что мои сообщения уже есть в old
+      .filter((message: Message) => 
+        //!existingMessageNums.has(message.num)
+        !MessagesForChatWithContext.newMessages.some(existingMessage => existingMessage.num.trim().toLowerCase() === message.num.trim().toLowerCase())//показываем только уникальные сообщения (т.к. при вызове new в бэке теперь сообщения не удаляются автоматически(не переносятся в old), и с каждым вызовом мы получаем все еще непрочитанные сообщения(они будут непрочитанными пока не отобразятся на экране))
+        && (message.sender !== getMyUid() //показываем только сообщения собеседника, потому что мои сообщения уже есть в old (при отправке читаем все сообщения собеседника, а моё сообщениеавтоматом будет в old (и в new, пока его не прочитают))
+        || (message.sender === getMyUid() && message.sender === uid)));//показываем свои сообщения, если мы в чате "избранное" (uid отправителя сообщений, мой uid, uid чата равны)
       }
     else if(LoadNew === "old"){
       decodedMessages = data
-      .map((message: { message: string }) => ({
+      .map((message: Message) => ({
         ...message,
-        message: "old_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку "old_ " + 
+        isReaded: true,
+        message: message.num + " _old_ " + decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку | "old_ " + | message.num + " _old_ " + 
       }))
       .reverse();
     }
@@ -279,22 +304,84 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if(LoadNew === "new"){
       setMessages((prev) => [...prev, ...decodedMessages]);
-      setMessagesForChatWithContext(prev => ({
-        messages: [...prev.messages, ...decodedMessages],
-        newMessagesCount: count
-      }));
+      setMessagesForChatWithContext(prev => {
+        // Создаем Set с номерами уже существующих сообщений
+        const existingMessageNums = new Set(prev.newMessages.map((m) => m.num.trim().toLowerCase()));
+
+        return{
+          messages: [...prev.messages],
+          newMessagesCount: count,
+          newMessages: [
+            ...prev.newMessages, 
+            ...decodedMessages.filter(
+              (message) => !existingMessageNums.has(message.num.trim().toLowerCase())
+            )
+          ],
+        };
+      });
     }
-    //else if(LoadNew === "new 1"){
-    //  setMessages((prev) => [...prev, ...decodedMessages.reverse()]);
-    //}
     else if(LoadNew === "old"){
       setMessages(decodedMessages);
       
-      setMessagesForChatWithContext({
+      setMessagesForChatWithContext(prev =>({
         messages: decodedMessages,
-        newMessagesCount: count
-      });
+        newMessagesCount: count,
+        newMessages: [...prev.newMessages]
+      }));
     }
+  };
+
+  const markMessagesAsReadByLastReadedMessageNum = async (uid: string | null, messageNum: string) => {
+    if (!user || !webSocketService.isconnected()) return;
+    if(!uid || !messageNum) return;
+
+    try {
+      await apiService.post(`/message/user/${uid}/new/${messageNum}`, {});// {} - empty data в post запросе
+      console.log(`ChatMessagesContext:\n markMessagesAsReadByLastReadedMessageNum():\nMarked messages as read: uid=${uid},\n messageNum=\t${messageNum} \n Message: \t${MessagesForChatWithContext.newMessages.find(m => m.num === messageNum)?.message} \n`);
+
+
+      //переносим сообщение из новых сообщений в прочитанные
+      //setMessagesForChatWithContext(prev =>({
+      //  messages: [...prev.messages, ...prev.newMessages.filter(m => m.num === messageNum)],
+      //  newMessagesCount: prev.newMessagesCount,
+      //  newMessages: [...prev.newMessages.filter(m => m.num !== messageNum)]
+      //}));
+      // и все сообщения до этого (срез массива)
+      setMessagesForChatWithContext((prev) => {
+        // Находим индекс сообщения с указанным номером
+        const index = prev.newMessages.findIndex((m) => m.num === messageNum);
+
+        if (index === -1) {
+          // Если сообщение не найдено, возвращаем предыдущее состояние
+          console.error('Message not found:', messageNum);
+          return prev;
+        }
+
+        // Берем все сообщения от начала массива до найденного индекса (включительно)
+        const messagesToMove = prev.newMessages.slice(0, index + 1);
+
+        return{
+          // Добавляем перенесенные сообщения в messages
+          messages: [...prev.messages, ...messagesToMove],
+          // Уменьшаем счетчик новых сообщений на количество перенесенных сообщений
+          newMessagesCount: Math.max(prev.newMessagesCount - messagesToMove.length, 0),
+          // Удаляем перенесенные сообщения из newMessages
+          newMessages: prev.newMessages.slice(index + 1),
+        };
+      });
+
+
+    } catch (error: any) {
+      if (error.response?.status === 400 && error.response.data.message === "Message with given number not found") {
+        console.log(`ChatMessagesContext:\n markMessagesAsReadByLastReadedMessageNum() \n Ошибка при попытке пометить сообщение прочитанным: \n Сообщение уже прочитано, либо не найдено\n messageNum=\t${messageNum}\n Message: \t${MessagesForChatWithContext.newMessages.find(m => m.num === messageNum)?.message} \n`);
+        } else {
+          console.error('Error marking messages as read:', error);
+        }
+    }
+
+    
+
+    fetchNewMessagesCountByUserUid(uid);//обновляем количество непрочитанных сообщений для чата
   };
 
   const fetchMessagesForGroup = async (ou: string | null) => {
@@ -324,30 +411,36 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       sender: getMyUid()!.toString(),
       num: messageToSend.messageNumber,
       message: msg,
+      isReaded: false,
       //groupOu?: string;
     }
     console.log("messageToShow:\n", messageToShow);
     webSocketService.sendMessage(messageToSend);
 
     fetchChats();//обновляем currentChatsInfo
-    const count = await fetchNewMessagesCountByUserUid(receiverUid);//можно заменить на считывание из currentchatsInfo для конкретного чата (TO-DO)
+    //const count = await fetchNewMessagesCountByUserUid(receiverUid);//можно заменить на считывание из currentchatsInfo для конкретного чата (TO-DO)
+    const count = currentChatsInfo.chats.find(chat => chat.id === receiverUid)?.unread || -1;
+
 
     if (count > 0){
       await fetchMessagesforChat(activeChatUid, "new", count);//подгружаем все новые сообщения
       console.warn(`sendMessage`);
     }
 
-    setMessages((prev) => [...prev, messageToShow]); // оптимистичное обновление
-      setMessagesForChatWithContext(prev => ({
-        messages: [...prev.messages, messageToShow],
-        //newMessagesCount: prev.newMessagesCount
-        newMessagesCount: 0//после отправки сообщения, прочитаются все непрочитанные
-      }));
+    if(receiverUid !== getMyUid()){//если не отправляем сообщение себе (в избранное)
+      setMessages((prev) => [...prev, messageToShow]); // оптимистичное обновление
+        setMessagesForChatWithContext(prev => ({
+          messages: [...prev.messages, messageToShow],
+          //newMessagesCount: prev.newMessagesCount
+          newMessagesCount: 0,//после отправки сообщения, прочитаются все непрочитанные
+          newMessages: [...prev.newMessages]
+        }));
+    }
   };
 
   const debouncedFetchMessagesforChat = useRef(
-    debounce((uid: string | null) => {
-      fetchMessagesforChat(uid, "old", 100); // <-- вызывается, но с задержкой
+    debounce((uid: string | null, LoadNew: string = "old", Count: number = 100) => {
+      fetchMessagesforChat(uid, LoadNew, Count); // <-- вызывается, но с задержкой
     }, 1000)
   ).current;
 
@@ -355,6 +448,12 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     fetchMessagesforChat(activeChatUidRef.current, "new", Count);
 
   };
+
+  const markMessagesAsReadByLastReadedMessageNumOutOfContext = async (messageNum: string) => {
+    if (!user || !webSocketService.isconnected() || !messageNum) return;
+    markMessagesAsReadByLastReadedMessageNum(activeChatUidRef.current, messageNum);
+  };
+
 
   // Создаем обработчики, которые используют activeChatUidRef вместо значения из замыкания
   const handleNotification = useCallback((notif: any) => {//когда приходит сообщение от кого-то
@@ -367,7 +466,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Используем ref вместо переменной из замыкания
     if (activeChatUidRef.current && notif.sender === activeChatUidRef.current) {
       console.log(`Fetching messages for active chat ${activeChatUidRef.current}`);
-      fetchMessagesforChat(activeChatUidRef.current, "new");
+      fetchMessagesforChat(activeChatUidRef.current, "new", (currentChatsInfo.chats.find(chat => chat.id === notif.sender)?.unread || 100) + 2 ); // +2 на всякий случай
     } else {
       console.log(`No active chat matching notification sender (active: ${activeChatUidRef.current}, sender: ${notif.sender})`);
     }
@@ -413,33 +512,39 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setMessages([]); // очистка старых сообщений
       setMessagesForChatWithContext({
         messages: [],
-        newMessagesCount: 0
+        newMessagesCount: 0,
+        newMessages: []
       })
       setIsLoading(true); // устанавливаем состояние загрузки
       
-      Promise.all([
-        fetchUserInfoByUid(activeChatUid),
-        //fetchMessagesforChat(activeChatUid),
-        debouncedFetchMessagesforChat(activeChatUid),
-        
-        //fetchMessagesforChat(activeChatUid, "new", 1),
-      ])
-      .then(() => {
-        setIsLoading(false); // снимаем состояние загрузки после завершения всех запросов
-      })
-      .catch((error: any) => {
-        if (error.response?.status === 400 && error.response.data.message === "Message already received") {
-          console.log('ChatMessagesContext:\nОшибка при загрузке новых сообщений чата: Сообщение уже получено');
-        } else {
-          console.error(`ChatMessagesContext:\nОшибка при загрузке данных чата ${activeChatUid}:`, error);
-        }
-        setIsLoading(false); // снимаем состояние загрузки в случае ошибки
+      fetchNewMessagesCountByUserUid(activeChatUid).then((count) => {
+
+        Promise.all([
+          fetchUserInfoByUid(activeChatUid),
+          //fetchMessagesforChat(activeChatUid),
+          fetchMessagesforChat(activeChatUid, "old", 100),//чтобы 2 вызов одной и той же debounce функции не перезаписывал первый вызов, используется обычная функция 
+          count > 0 ? debouncedFetchMessagesforChat(activeChatUid, "new", count) : null,
+          //fetchMessagesforChat(activeChatUid, "new", 1),
+        ].filter(Boolean)) // Убираем null из массива
+        .then(() => {
+          setIsLoading(false); // снимаем состояние загрузки после завершения всех запросов
+        })
+        .catch((error: any) => {
+          if (error.response?.status === 400 && error.response.data.message === "Message already received") {
+            console.log('ChatMessagesContext:\nОшибка при загрузке новых сообщений чата: Сообщение уже получено');
+          } else {
+            console.error(`ChatMessagesContext:\nОшибка при загрузке данных чата ${activeChatUid}:`, error);
+          }
+          setIsLoading(false); // снимаем состояние загрузки в случае ошибки
+        });
       });
+
     } else {//если нет активного чата
       setMessages([]); // очистка старых сообщений
       setMessagesForChatWithContext({
         messages: [],
-        newMessagesCount: 0
+        newMessagesCount: 0,
+        newMessages: []
       })
       setActiveChatUser(null);
     }
@@ -479,6 +584,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
         fetchUsers, 
         fetchGroups, 
         fetchMessagesforChat, 
+        markMessagesAsReadByLastReadedMessageNumOutOfContext,
         fetchNewMessagesforChatOutOfContext, 
         fetchMessagesForGroup,
 
