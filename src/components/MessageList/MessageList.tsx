@@ -192,6 +192,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
           isOwn={isOwn}
           isFirstInGroup={isFirstInGroup}
           isLastInGroup={isLastInGroup}
+          isReaded={message.isReaded}
           //attachments={message.attachments} //пока нет поддержки
         />);
       }
@@ -235,7 +236,8 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
                 text={"\t" + message.num + " | " + message.message}
                 isOwn={isOwn}
                 isFirstInGroup={isFirstInGroup}
-                isLastInGroup={isLastInGroup} 
+                isLastInGroup={isLastInGroup}
+                isReaded={message.isReaded}
                 //attachments={message.attachments} //пока нет поддержки
               />
               <EmptyLoader 

@@ -134,3 +134,34 @@
 .message.own .timestamp {
   align-self: flex-start;
 }
+
+
+.Checkmarks{
+  position: relative;
+  top: -9px;
+  left: -30px
+}
+
+/*.Checkmarks .OfReading{
+  color: #A4A4A4;
+}
+
+.Checkmarks .OfReceipt{
+  color: #A4A4A4;
+}
+
+.Checkmarks .OfReceipt{
+  color: #A4A4A4;
+}
+
+.Checkmarks .OfReceipt .stroke-primary{
+  color: #A4A4A4;
+}*/
+
+/*прозрачный цвет*/
+/*.Checkmarks .OfReceipt .stroke-secondary{
+  color: #a4a4a400;
+}*/
+
+
+

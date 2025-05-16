@@ -4,6 +4,9 @@ import styles from './MessageBubble.module.css';
 
 import BubbleTailIncoming from "../../assets/Bubble_Tail_incoming_React_v2.svg";
 import BubbleTailOutgoing from "../../assets/Bubble_Tail_outgoing_React_v2.svg";
+import Checkmarks_Of_Receipt from "../../assets/Checkmarks_Of_Receipt_React.svg";
+import Checkmarks_Of_Receipt_v2 from "../../assets/Checkmarks_Of_Receipt_v2_React.svg";
+import Checkmarks_Of_Reading from "../../assets/Checkmarks_Of_Reading_React.svg";
 
 
 
@@ -15,6 +18,8 @@ type MessageProps = {
 
   isFirstInGroup?: boolean;
   isLastInGroup?: boolean;
+
+  isReaded?: boolean;
 };
 
 export const MessageBubble = ({ 
@@ -24,6 +29,7 @@ export const MessageBubble = ({
   timestamp,
   isFirstInGroup,
   isLastInGroup,
+  isReaded,
 }: MessageProps) => {
 
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -60,6 +66,9 @@ export const MessageBubble = ({
 
       {/*@ts-ignore*/} {/*Временное решение для исправления ошибки (для сборки)*/}
       {isOwn ? null : <BubbleTailIncoming className={`${styles.BubbleTail} ${styles.Incoming} ${isLastInGroup ? styles.lastInGroup : ''}`} width={34} height={19} color="#5196FF"/>}
+      
+      
+      
       
 
       <Squircle 
@@ -111,9 +120,19 @@ export const MessageBubble = ({
         </div>
       </Squircle>
 
+
+
+
       {/*@ts-ignore*/} {/*Временное решение для исправления ошибки (для сборки)*/}
       {isOwn ? <BubbleTailOutgoing className={`${styles.BubbleTail} ${styles.Outgoing} ${isLastInGroup ? styles.lastInGroup : ''}`} width={34} height={19} color="#39DA1F"/> : null}
+      
       {timestamp && <div className={styles.timestamp}>{timestamp}</div>}
+
+      {/*@ts-ignore*/} {/*Временное решение для исправления ошибки (для сборки)*/}
+      {isOwn ? (isReaded ? <Checkmarks_Of_Reading className={`${styles.Checkmarks} ${styles.OfReading} ${isLastInGroup ? '' : ''}`} width={14} height={11} color="#B7B7B7"/> 
+      //@ts-ignore //Временное решение для исправления ошибки (для сборки)
+      : <Checkmarks_Of_Receipt_v2 className={`${styles.Checkmarks} ${styles.OfReceipt} ${isLastInGroup ? '' : ''}`} width={14} height={11} color="#9B9B9B"/>) 
+      : null}
     </div>
   );
 };
