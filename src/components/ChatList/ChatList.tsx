@@ -120,7 +120,10 @@ export const ChatList = () => {
           width: `${ChatItemSize.width}px`,
           height: `52px`,
         }}
-        onClick={() => setNewDialogChatsIsOpened((prev) => !prev)}//открываем список пользователей для создания нового диалога
+        onClick={() => {
+          fetchUsers();
+          setNewDialogChatsIsOpened((prev) => !prev);
+        }}//открываем список пользователей для создания нового диалога
         >
 
           

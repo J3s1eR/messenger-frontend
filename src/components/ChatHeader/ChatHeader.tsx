@@ -15,8 +15,8 @@ export const ChatHeader = () => {
   const {ActiveChatUser, isLoading} = useChatMessages();
   const {getMyUid} = useAuth();
 					 
-		  
-																	
+	
+	
 
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {

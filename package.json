@@ -17,6 +17,7 @@
     "@stomp/stompjs": "^7.1.0",
     "axios": "^1.8.3",
     "esbuild": "^0.25.2",
+    "lodash": "^4.17.21",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.3.0",
