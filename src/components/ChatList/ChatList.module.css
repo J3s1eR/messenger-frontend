@@ -3,6 +3,8 @@
   flex-direction: column;
   gap: 2px;
   margin-top: 0px;
+  padding-right: 8px;
+  height: 100%;
 }
 
 .noChats{
@@ -18,8 +20,8 @@
 .chatItem {
   display: flex;
   /*padding: 12px;
-  margin: 2px 0;*/
-  background: #fff;
+  margin: 2px 0;
+  background: #fff;*/
   background: radial-gradient(circle at left, hsl(0, 0%, 100%) 30%, hsl(0, 0%, 100%) 80%);
   cursor: pointer;
   transition: background 0.5s;
@@ -35,6 +37,7 @@
   /*align-items: center;*/
 
   cursor: pointer;
+  z-index: 5;
 }
 
 .NewchatWithUserItem{
@@ -107,18 +110,6 @@
   font-family: 'Inter', sans-serif;
 }
 
-.NewchatWithUserItem .content{
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start; /* Выровнены по левому краю */
-  margin-top: 8px;
-  margin-bottom: 8px;
-  color: #000000;
-  font-size: 15px;
-  font-family: 'Inter', sans-serif;
-}
-
 .NewchatWithUser .content{
   display: flex;
   flex-direction: column;
@@ -131,6 +122,40 @@
   font-family: 'Inter', sans-serif;
 }
 
+.NewchatWithUserItem .content{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start; /* Выровнены по левому краю */
+  margin-top: 8px;
+  margin-bottom: 8px;
+  color: #000000;
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+}
+
+.NewchatWithUserItemContainerOpened{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 0px;
+  /*padding-right: 8px;*/
+  transform: translateY(0px);
+  position: relative;
+  opacity: 1;
+  transition: transform 0.3s ease, opacity 0.3s ease, display 0.3s ease;
+}
+
+.NewchatWithUserItemContainerClosed{
+  /*display: none;*/
+  position: absolute;
+  transform: translateY(-100%);
+  opacity: 0;
+  z-index: 1;
+  transition: transform 0.3s ease, opacity 0.3s ease, display 0.3s ease;
+}
+
+
 .name {
   /*margin-bottom: 4px;*/
   font-weight: 500;
@@ -142,7 +167,7 @@
 }
 
 .chatItem:hover {
-  background: hsl(0, 0%, 95%);
+  /*background: hsl(0, 0%, 95%);*/
   background: radial-gradient(circle at left, hsl(0, 0%, 100%) 20%, hsl(0, 0%, 96%) 80%);
   transition: background 0.15s;
 }
@@ -184,10 +209,10 @@
   /* Стили для расширенного содержимого */
 .openedChat {
   background: hsl(0, 0%, 90%);
-  /*ТЕСТ*/
+  /*ТЕСТ
   background: linear-gradient(90deg, hsl(0, 0%, 100%) 66%, hsl(0, 0%, 90%) 80%);
-  background: linear-gradient(135deg, hsl(0, 0%, 100%) 60%, hsl(0, 0%, 90%) 80%);
-  background: radial-gradient(circle at left, hsl(0, 0%, 100%) 65%, hsl(0, 0%, 90%) 80%);
+  background: linear-gradient(135deg, hsl(0, 0%, 100%) 60%, hsl(0, 0%, 90%) 80%);*/
+  background: radial-gradient(circle at left, hsl(0, 0%, 94%) 65%, hsl(0, 0%, 90%) 80%);
   /*padding: 12px;*/
   
   /*border-left: 3px solid #007bff; /* Акцентная полоса */
@@ -199,10 +224,10 @@
 
 .openedChat:hover {
   background: hsl(0, 0%, 90%);
-    /*ТЕСТ*/
+    /*ТЕСТ
     background: linear-gradient(90deg, hsl(0, 0%, 100%) 66%, hsl(0, 0%, 90%) 80%);
-    background: linear-gradient(135deg, hsl(0, 0%, 100%) 60%, hsl(0, 0%, 90%) 80%);
-    background: radial-gradient(circle at left, hsl(0, 0%, 100%) 65%, hsl(0, 0%, 90%) 80%);
+    background: linear-gradient(135deg, hsl(0, 0%, 100%) 60%, hsl(0, 0%, 90%) 80%);*/
+    background: radial-gradient(circle at left, hsl(0, 0%, 98%) 65%, hsl(0, 0%, 90%) 80%);
     transition: background 0.1s;
 }
 

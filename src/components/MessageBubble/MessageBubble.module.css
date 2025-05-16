@@ -22,6 +22,7 @@
 .message.own {
   align-items: flex-end;
   justify-content: flex-end;
+  margin-right: -10px;
 }
 
 .bubble {
@@ -116,7 +117,7 @@
   margin-bottom: 4px;
 }
 
-.message.own .text {
+.message .text {
   color: white;
 }
 

@@ -1,7 +1,7 @@
 import { Squircle } from '../ultimate-squircle/squircle-js';
 import styles from './ChatList.module.css';
 import  UserAvatar  from '../UserAvatar/UserAvatar';
-import { useState, useEffect, useMemo} from 'react';
+import { useState, useEffect, useMemo, useRef} from 'react';
 
 import { CustomScrollbar } from '../CustomScrollbar/CustomScrollbar';
 
@@ -11,129 +11,6 @@ import { useAuth } from '../../contexts/AuthContext';
 
 import { FormatDateAndTime } from '../../services/BasicServices/FormatDateAndTime';
 
-
-/*
-const chats = [
-  {
-    id: 1,
-    avatar: 'src/assets/dog.png',
-    name: 'Анна Иванова',
-    lastMessage: 'Документы готовы',
-    time: '10:30',
-    unread: 2
-  },
-  {
-    id: 2,
-    avatar: 'src/assets/john_pork.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  // ... другие чаты
-  {
-    id: 3,
-    avatar: 'src/assets/Ye.png',
-    name: 'Ye',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 3
-  },
-  {
-    id: 4,
-    avatar: 'src/assets/dog_2.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 5,
-    avatar: 'src/assets/iii.png',
-    name: 'User Name',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 6,
-    avatar: 'src/assets/john_pork.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 7,
-    avatar: 'src/assets/Ye.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 8,
-    avatar: 'src/assets/dog_2.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 9,
-    avatar: 'src/assets/iii.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 10,
-    avatar: 'src/assets/dog_2.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 11,
-    avatar: 'src/assets/Ye.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 12,
-    avatar: 'src/assets/iii.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-  {
-    id: 13,
-    avatar: 'src/assets/john_pork.png',
-    name: 'John Pork',
-    lastMessage: 'Встреча перенесена',
-    time: 'Вчера',
-    unread: 0
-  },
-
-
-];
-*/
-
-/*
-interface ChatListProps {
-  //activeChatId: number | null;
-  //setActiveChatId: (id: number | null) => void;
-
-  //activeChatUid: string | null;
-  //setActiveChatUid: (Uid: string | null) => void;
-  //chats: any[]; // список чатов
-}
-*/
 
 //export const ChatList = ({activeChatUid, setActiveChatUid, chats}: ChatListProps) => {
 export const ChatList = () => {
@@ -148,25 +25,28 @@ export const ChatList = () => {
 
   const [timeIsHovered, setTimeIsHovered] = useState(false);
 
-  // Добавляем эффект для обновления счетчика непрочитанных сообщений при получении уведомлений
-  //useEffect(() => {
-  //  if (notifications.length > 0 && chats.length > 0) {
-  //    // Получаем последнее уведомление
-  //    const lastNotification = notifications[notifications.length - 1];
-  //    
-  //    // Находим чат, к которому относится уведомление
-  //    const chatToUpdate = chats.find(chat => chat.id === lastNotification.sender);
-  //    
-  //    if (chatToUpdate && lastNotification.sender !== activeChatUid) {
-  //      // Увеличиваем счетчик непрочитанных сообщений только если чат не активен
-  //      chatToUpdate.unread = (chatToUpdate.unread || 0) + 1;
-  //      console.log(`chatList.tsx:\nUpdated unread count for chat ${chatToUpdate.id} to ${chatToUpdate.unread}`);
-  //      
-  //      // Обновляем список чатов для вызова ререндера
-  //      setChats([...chats]);
-  //    }
-  //  }
-  //}, [notifications, chats, activeChatUid]);
+  const ChatItemRef = useRef<HTMLDivElement>(null);
+  const [ChatItemSize, setChatItemSize] = useState({ width: 400, height: 0 });
+
+  const [NewDialogChatsIsOpened, setNewDialogChatsIsOpened] = useState(false);
+
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        
+        setChatItemSize({ width, height });
+      }
+    });
+
+    if (ChatItemRef.current) {
+      observer.observe(ChatItemRef.current);
+    }
+
+    return () => {
+      if (ChatItemRef.current) observer.unobserve(ChatItemRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     //const loadChatsAndUsers = async () => {
@@ -207,40 +87,13 @@ export const ChatList = () => {
     //console.log('chatList.tsx:\ncurrentChatsInfo:', currentChatsInfo);
   }, []);
 
-  //}, [fetchChats]);currentChatsInfo handleNotification memoizedChats
-
-  /*
-  // Состояние для хранения ID открытого чата
-  const [openedChatId, setOpenedChatId] = useState<number | null>(null);
-
-  // Функция для переключения состояния открытия/закрытия чата
-  const toggleChat = (chatId: number) => {
-    setOpenedChatId((prevId) => (prevId === chatId ? null : chatId));
-  };*/
-
-
-  // Функция для переключения состояния открытия/закрытия чата
-  /*const toggleChat = (chatId: number) => {
-    const newId = activeChatId === chatId ? null : chatId;
-    setActiveChatId(newId);
-  };*/
+ 
 
   const toggleChat = (chatUid: string) => {
     console.log('toggleChat():\nCurrent activeChatUid:', activeChatUid);
     console.log('toggleChat():\nIncoming chatUid:', chatUid);
     const newUid = activeChatUid === chatUid ? null : chatUid;
     console.log('toggleChat():\nNew chatUid:', newUid);
-    
-    // Сбрасываем счетчик непрочитанных сообщений только при активации чата
-    //if (newUid !== null) {
-    //  const chatToUpdate = chats.find(chat => chat.id === chatUid);
-    //  if (chatToUpdate) {
-    //    chatToUpdate.unread = 0;
-    //    console.log(`toggleChat():\nReset unread count for chat ${chatUid}`);
-    //    // Обновляем список чатов для вызова ререндера
-    //    setChats([...chats]);
-    //  }
-    //}
     
     setActiveChatUid(newUid);
     console.log('toggleChat():\nNow activeChatUid:', activeChatUid);
@@ -256,9 +109,18 @@ export const ChatList = () => {
         className={styles.NewchatWithUser} 
         cornerRadius={16}
 
-        defaultWidth={400}
+        //defaultWidth={400} //ширина терерь регулируется кодом сверху
         defaultHeight={52}
         cornerSmoothing = {1}
+        style={{
+          minHeight: '52px',
+          maxHeight: '52px',
+          minWidth: '350px',
+          maxWidth: '800px',
+          width: `${ChatItemSize.width}px`,
+          height: `52px`,
+        }}
+        onClick={() => setNewDialogChatsIsOpened((prev) => !prev)}//открываем список пользователей для создания нового диалога
         >
 
           
@@ -288,51 +150,70 @@ export const ChatList = () => {
         </Squircle>
 
       {/*список пользователей для создания нового диалога*/}
-      {users.map(user =>
-        <Squircle
-        className={styles.NewchatWithUserItem} 
-        cornerRadius={14}
-        cornerSmoothing = {1}
-
-        defaultWidth={400}
-        defaultHeight={52}
-
-        key={user.uid}
-        onClick={() => {
-          //toggleChat(chat.id); 
-          console.log(`--------------------------------`)
-          console.log('chatList.tsx:\nCurrent activeChatUid:', activeChatUid);
-          console.log(`chatList.tsx:\nClick chat ${user.uid}`)
-          toggleChat(user.uid);
-          console.log('chatList.tsx:\nNow activeChatUid:', activeChatUid);
-          //setActiveChatId(chat.id)
+      <div 
+        className={`${NewDialogChatsIsOpened ? styles.NewchatWithUserItemContainerOpened : styles.NewchatWithUserItemContainerClosed}`} 
+        style={{
+          minHeight: '52px',
+          minWidth: '350px',
+          maxWidth: '800px',
+          width: `${ChatItemSize.width}px`,
         }}
-        >
+      >
+        {users.map(user =>
+          <Squircle
+          className={`${styles.NewchatWithUserItem}`} 
+          cornerRadius={14}
+          cornerSmoothing = {1}
 
-          <div className={styles.avatar}>
-          <UserAvatar 
-            //src = {user.avatar} 
-            alt = {user.name} 
-            defaultWidth = {44} 
-            defaultHeight = {44} 
-            cornerRadius = {12} 
-            cornerSmoothing = {1}/>
-          </div>
+          //defaultWidth={400} //ширина терерь регулируется кодом сверху
+          defaultHeight={52}
 
-          <div className={styles.all_content}>
-            {/* Основное содержимое */}
-            <div className={styles.content}>
-              <div className={styles.name}>
-                {isLoading ? 'Загрузка...' : user.uid === getMyUid() ? 'Избранное' : user.name}
-              </div>
-            
-              <div className={styles.message}>
-              Написать сообщение
+          key={user.uid}
+          onClick={() => {
+            //toggleChat(chat.id); 
+            console.log(`--------------------------------`)
+            console.log('chatList.tsx:\nCurrent activeChatUid:', activeChatUid);
+            console.log(`chatList.tsx:\nClick chat ${user.uid}`)
+            toggleChat(user.uid);
+            console.log('chatList.tsx:\nNow activeChatUid:', activeChatUid);
+            setNewDialogChatsIsOpened(false);//закрываем список пользователей для создания нового диалога
+            //setActiveChatId(chat.id)
+          }}
+          style={{
+            minHeight: '52px',
+            maxHeight: '52px',
+            minWidth: '350px',
+            maxWidth: '800px',
+            width: `${ChatItemSize.width}px`,
+            height: `52px`,
+          }}
+          >
+
+            <div className={styles.avatar}>
+            <UserAvatar 
+              //src = {user.avatar} 
+              alt = {user.name} 
+              defaultWidth = {44} 
+              defaultHeight = {44} 
+              cornerRadius = {12} 
+              cornerSmoothing = {1}/>
+            </div>
+
+            <div className={styles.all_content}>
+              {/* Основное содержимое */}
+              <div className={styles.content}>
+                <div className={styles.name}>
+                  {isLoading ? 'Загрузка...' : user.uid === getMyUid() ? 'Избранное' : user.name}
+                </div>
+
+                <div className={styles.message}>
+                Написать сообщение
+                </div>
               </div>
             </div>
-          </div>
-        </Squircle>
-      )}
+          </Squircle>
+        )}
+      </div>
 
       {/*список существующих чатов*/}
       {Array.isArray(currentChatsInfo?.chats) && currentChatsInfo?.chats.length > 0 ? (
@@ -354,7 +235,7 @@ export const ChatList = () => {
           bottomRightCornerRadius={20}//Правый нижний
           cornerSmoothing={1}
           
-          defaultWidth={400}
+          //defaultWidth={400} //ширина терерь регулируется кодом сверху
           defaultHeight={96}
 
           onClick={() => {
@@ -364,8 +245,17 @@ export const ChatList = () => {
             console.log(`chatList.tsx:\nClick chat ${chat.id}`)
             toggleChat(chat.id);
             console.log('chatList.tsx:\nNow activeChatUid:', activeChatUid);
+            setNewDialogChatsIsOpened(false);//закрываем список пользователей для создания нового диалога
             //setActiveChatId(chat.id)
           }}
+          style={{
+          minHeight: '96px',
+          maxHeight: '96px',
+          minWidth: '350px',
+          maxWidth: '800px',
+          width: `${ChatItemSize.width}px`,
+          height: `96px`,
+        }}
           //onClick={() => toggleChat(chat.id);} // Переключение состояния
           >
           {/* Аватарка */}

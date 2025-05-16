@@ -100,7 +100,7 @@ export const Sidebar = () => {
           >
             <h3 className={styles.MenuItem}>Меню</h3>
             <p className={styles.MenuItem} onClick={handleLogout}>Выйти</p> {/* Обработчик для "Выйти" */}
-            <p className={styles.MenuItem} onClick={handleSettings}>Настройки</p> {/* Обработчик для "Настройки" */}
+            {/*<p className={styles.MenuItem} onClick={handleSettings}>Настройки</p>*/} {/* Обработчик для "Настройки" */}
             <p className={styles.MenuItem} onClick={toggleOverlay}>Закрыть</p> {/* Переключение оверлея */}
         
           </Squircle>
