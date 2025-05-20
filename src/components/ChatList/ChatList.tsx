@@ -159,7 +159,7 @@ export const ChatList = () => {
           minHeight: '52px',
           minWidth: '350px',
           maxWidth: '800px',
-          width: `${ChatItemSize.width}px`,
+          //width: `${ChatItemSize.width}px`,
         }}
       >
         {users.map(user =>
