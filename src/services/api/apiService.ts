@@ -16,7 +16,7 @@ export const apiService = {
   login: async (username: string, password: string) => {
     const response = await axios.post(`${API_URL}/auth`, { username, password });
     token = response.data.token;
-    Myuid = username;
+    Myuid = username.trim();
     return response.data;
   },
 

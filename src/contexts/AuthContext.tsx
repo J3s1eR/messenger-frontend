@@ -24,10 +24,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await apiService.login(username, password);
+      const response = await apiService.login(username.trim(), password.trim());
       apiService.setToken(response.token);
-      setUser(username);
-      console.log('Вход\nИмя:', username);
+      setUser(username.trim());
+      console.log('Вход\nИмя:', username.trim());
       console.log('Токен:', apiService.getToken());
 
       //const get_keys_response = await apiService.get('/user/keys')
