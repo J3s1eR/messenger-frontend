@@ -70,7 +70,7 @@ export const RightPanel = () => {
               <div className={styles.detailLabel}>working hours</div>
             </div>
             <div className={styles.detail}>
-              <div>{userDetails.userId}</div>
+              <div>{ActiveChatUser?.uid ? ActiveChatUser?.uid : userDetails.userId}</div>
               <div className={styles.detailLabel}>User ID</div>
             </div>
             <div className={styles.detail}>
