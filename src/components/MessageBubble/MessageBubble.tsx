@@ -8,12 +8,13 @@ import Checkmarks_Of_Receipt from "../../assets/Checkmarks_Of_Receipt_React.svg"
 import Checkmarks_Of_Receipt_v2 from "../../assets/Checkmarks_Of_Receipt_v2_React.svg";
 import Checkmarks_Of_Reading from "../../assets/Checkmarks_Of_Reading_React.svg";
 
+import { Payload } from '../../services/CustomTypes';
 
 
 type MessageProps = {
   text: string;
   isOwn: boolean;
-  attachments?: string[];
+  attachments?: Payload;
   timestamp?: string;
 
   isFirstInGroup?: boolean;
@@ -62,6 +63,7 @@ export const MessageBubble = ({
 
 
   return (
+    <div className={`${styles.messageRow} ${isOwn ? styles.own : ''}`}>
     <div className={`${styles.message} ${isOwn ? styles.own : ''} ${isFirstInGroup ? styles.firstInGroup : ''} ${isLastInGroup ? styles.lastInGroup : ''}`}>
 
       {/*@ts-ignore*/} {/*Временное решение для исправления ошибки (для сборки)*/}
@@ -94,7 +96,7 @@ export const MessageBubble = ({
         
       >
         <div ref={bubbleRef} className={styles.bubbleContent}>
-        {attachments?.map(attachment => (
+        {attachments?.images.map(attachment => (
           <Squircle
           key={attachment} className={styles.attachment}
           topLeftCornerRadius={10}//Левый верхний
@@ -120,7 +122,7 @@ export const MessageBubble = ({
         </div>
       </Squircle>
 
-
+      
 
 
       {/*@ts-ignore*/} {/*Временное решение для исправления ошибки (для сборки)*/}
@@ -133,6 +135,7 @@ export const MessageBubble = ({
       //@ts-ignore //Временное решение для исправления ошибки (для сборки)
       : <Checkmarks_Of_Receipt_v2 className={`${styles.Checkmarks} ${styles.OfReceipt} ${isLastInGroup ? '' : ''}`} width={14} height={11} color="#9B9B9B"/>) 
       : null}
+    </div>
     </div>
   );
 };

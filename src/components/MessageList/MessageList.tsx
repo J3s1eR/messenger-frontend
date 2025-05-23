@@ -193,7 +193,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
           isFirstInGroup={isFirstInGroup}
           isLastInGroup={isLastInGroup}
           isReaded={message.isReaded}
-          //attachments={message.attachments} //пока нет поддержки
+          attachments={message.payload} //пока нет поддержки
         />);
       }
       )}
@@ -238,7 +238,7 @@ export const MessageList = ({messageInputRef}: MessageListProps) => {
                 isFirstInGroup={isFirstInGroup}
                 isLastInGroup={isLastInGroup}
                 isReaded={message.isReaded}
-                //attachments={message.attachments} //пока нет поддержки
+                attachments={message.payload} //пока нет поддержки
               />
               <EmptyLoader 
                 onVisible={() =>{console.log("MARK AS READ:", message.num); markMessagesAsReadByLastReadedMessageNumOutOfContext(message.num)}}

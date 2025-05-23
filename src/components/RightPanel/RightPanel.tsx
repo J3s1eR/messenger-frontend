@@ -24,7 +24,7 @@ const files = Array.from({ length: 60 }, (_, i) => ({
 
 export const RightPanel = () => {
   const {getMyUid} = useAuth();
-  const {ActiveChatUser, isLoading} = useChatMessages();
+  const {ActiveChatUser, isLoading, MessagesForChatWithContext} = useChatMessages();
   // Вычисляем стиль с использованием пропсов
   //const FileItemStyle = {
   //  width: `${80}px`,
@@ -98,7 +98,30 @@ export const RightPanel = () => {
           {/* Компонент скроллбара */}
           <CustomScrollbar style={{ height: '100%', width: '100%' }}>
             <div className={styles.fileGrid}>
-              {files.map((file) => (
+              {MessagesForChatWithContext.messages.map((message) => (
+              message.payload?.images?.length ? (
+              message.payload?.images.map((file, index) => (
+                <Squircle key={message.num + index}
+                  className={styles.fileItem}
+                  style={{
+                    width: `${80}px`,
+                    height: `${80}px`,
+                  }}
+                  cornerRadius={14}
+                  cornerSmoothing={1}
+                  defaultWidth={80}
+                  defaultHeight={80}
+                  asChild
+                >
+                  <img src={file} alt={`File ${message.num + index}`} />
+                </Squircle>
+              )) ) : null
+            ))}
+
+
+
+
+              {/*files.map((file) => (
                 <Squircle key={file.id}
                   className={styles.fileItem}
                   style={{
@@ -113,7 +136,7 @@ export const RightPanel = () => {
                 >
                   <img src={file.url} alt={`File ${file.id}`} />
                 </Squircle>
-              ))}
+              ))*/}
             </div>
           </CustomScrollbar>
           

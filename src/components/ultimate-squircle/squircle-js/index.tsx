@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useMemo } from "react";
+import { useMemo, useState, useImperativeHandle, forwardRef } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { getSvgPath } from "../figma-squircle";
 
@@ -28,27 +28,27 @@ interface SquircleProps {
   defaultHeight?: number;
 }
 
-function Squircle<E extends React.ElementType = "div">({
-  cornerRadius,
+function SquircleInner<E extends React.ElementType = "div">(
+  props: SquircleProps & Omit<React.ComponentPropsWithoutRef<E>, keyof SquircleProps>,
+  refFromParent: React.Ref<any>
+) {
+  const {
+    cornerRadius,
+    topLeftCornerRadius,
+    topRightCornerRadius,
+    bottomLeftCornerRadius,
+    bottomRightCornerRadius,
+    cornerSmoothing = 0.6,
+    asChild,
+    style,
+    width: w,
+    height: h,
+    defaultWidth,
+    defaultHeight,
+    ...propsRest
+  } = props;
 
-  topLeftCornerRadius,
-  topRightCornerRadius,
-  bottomLeftCornerRadius,
-  bottomRightCornerRadius,
-
-  cornerSmoothing = 0.6,
-  asChild,
-  style,
-  width: w,
-  height: h,
-  defaultWidth,
-  defaultHeight,
-  ...props
-}: SquircleProps &
-  Omit<React.ComponentPropsWithoutRef<E>, keyof SquircleProps>) {
   const Component = asChild ? Slot : "div";
-
-  // Note: If you need to pass ref, wrap this component in another, and style to full-width/height.
   const [ref, { width, height }] = useElementSize<HTMLDivElement>({
     defaultWidth,
     defaultHeight,
@@ -56,6 +56,13 @@ function Squircle<E extends React.ElementType = "div">({
 
   const actualWidth = w ?? width;
   const actualHeight = h ?? height;
+
+  // Внутренний state для ручного триггера useMemo
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  useImperativeHandle(refFromParent, () => ({
+    forceUpdateClipPath: () => setForceUpdate(f => f + 1)
+  }), []);
 
   const path = useMemo(() => {
     if (actualWidth === 0 || actualHeight === 0) return "";
@@ -71,11 +78,11 @@ function Squircle<E extends React.ElementType = "div">({
 
       cornerSmoothing,
     });
-  }, [actualWidth, actualHeight, cornerRadius, cornerSmoothing]);
+  }, [actualWidth, actualHeight, cornerRadius, cornerSmoothing, forceUpdate]);
 
   return (
     <Component
-      {...props}
+      {...propsRest}
       ref={ref}
       style={{
         ...style,
@@ -89,5 +96,6 @@ function Squircle<E extends React.ElementType = "div">({
   );
 }
 
-export { Squircle, type SquircleProps };
+export const Squircle = forwardRef(SquircleInner);
+export type { SquircleProps };
 export * from "./StaticSquircle";

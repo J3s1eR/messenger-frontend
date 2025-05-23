@@ -7,6 +7,9 @@ import styles from './ChatWindow.module.css';
 
 import { useChatMessages } from '../../contexts/ChatMessagesContext';
 
+
+
+
 /*
 interface ChatWindowProps {
   //chatId: number;
@@ -174,7 +177,30 @@ export const ChatWindow = () => {
   
   const {activeChatUid, messages, sendMessage, fetchMessagesforChat } = useChatMessages();
 
-  
+
+
+  const [dragOverlayVisible, setDragOverlayVisible] = useState(false);
+  const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    setDroppedFiles(files); // передаем в MessageInput
+    //dropRef.current?.classList.remove(`${styles.ChatDragOver}`);
+    setDragOverlayVisible(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    //dropRef.current?.classList.add(`${styles.ChatDragOver}`);
+    setDragOverlayVisible(true);
+  };
+
+  const handleDragLeave = () => {
+    //dropRef.current?.classList.remove(`${styles.ChatDragOver}`);
+    setDragOverlayVisible(false);
+  };
 
   //const [chatMessages, setChatMessages] = useState<any[]>([]);
   
@@ -197,7 +223,7 @@ export const ChatWindow = () => {
   //}, [messages, sendMessage]);
 
   // Функция для добавления нового сообщения
-  const addMessage = (text: string) => {
+  const addMessage = (text: string, files: File[]) => {
     /*setMessages(prevMessages => [
       ...prevMessages,
       {
@@ -221,16 +247,34 @@ export const ChatWindow = () => {
     if(!activeChatUid){
       return;
     }
-    sendMessage(activeChatUid, text); // отправляем через WebSocket
+    sendMessage(activeChatUid, text, files); // отправляем через WebSocket
   };
 
   return (
-    <div className={styles.chatWindow}>
+    <div className={styles.chatWindow}
+    onDrop={handleDrop}
+    onDragOver={handleDragOver}
+    onDragLeave={handleDragLeave}
+    ref={dropRef}
+    >
+      
       <ChatHeader />
       {/*<MessageList {/*messages={messages}/>*/}
       {/*<MessageList messages={chatMessages}/>*/}
+
+      {/* Drag overlay */}
+      {dragOverlayVisible && (
+        <div className={styles.ChatDragOver} 
+        style={{
+          width: `${dropRef.current?.clientWidth ? dropRef.current?.clientWidth - 8 : 400}px`,
+        }}>
+          <p className={styles.overlayText}>Отпустите файл для загрузки</p>
+        </div>
+      )}
+
       <MessageList messageInputRef={messageInputRef}/>
-      <MessageInput addMessage={addMessage} ref={messageInputRef}/>
+      
+      <MessageInput addMessage={addMessage} ref={messageInputRef} droppedFiles={droppedFiles}/>
     </div>
   );
 };

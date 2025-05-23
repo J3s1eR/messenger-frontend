@@ -5,9 +5,10 @@ type TruncatedTextProps = {
   text: string;
   maxLength: number;
   className?: string;
+  AlwaysTrancated?: boolean;
 };
 
-const TruncatedText = ({ text, maxLength, className = "" }: TruncatedTextProps) => {
+const TruncatedText = ({ text, maxLength, className = "", AlwaysTrancated = false }: TruncatedTextProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const truncatedText =
@@ -20,7 +21,7 @@ const TruncatedText = ({ text, maxLength, className = "" }: TruncatedTextProps) 
       onMouseLeave={() => setIsHovered(false)}
       title={text} // Показывает полный текст при наведении
     >
-      {isHovered ? text : truncatedText}
+      {isHovered ? AlwaysTrancated ? truncatedText : text : truncatedText}
     </span>
   );
 };

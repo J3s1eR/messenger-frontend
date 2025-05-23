@@ -14,3 +14,29 @@
     background-color: #E6E6E6;
 
   }
+
+  .ChatDragOver{
+    z-index: 20;
+    flex: 2;
+    height: 100vh;
+
+    position: absolute;
+    top: 0;
+    width: 100%;
+    bottom: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9;
+    pointer-events: none; /* чтобы не блокировать drag */
+
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .overlayText{
+    font-size: 20px;
+    color: #888;
+  }

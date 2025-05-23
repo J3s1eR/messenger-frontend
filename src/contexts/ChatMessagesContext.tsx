@@ -6,18 +6,26 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { useAuth } from './AuthContext';
 
+import { Payload } from '../services/CustomTypes';
+
 import { debounce} from 'lodash';
+
+//interface Payload {//Определен в ../services/CustomTypes
+//  text_message: string;
+//  images: string[]; // base64 строки
+//  pdf: string[];    // base64 строки
+//}
 
 interface Message {
   //receiverUid: string;
   sender: string;//senderUid
   num: string;//messageNumber
-  message: string; // Предполагается, что это Base64-закодированная строка
+  message: string; // Предполагается, что это Base64-закодированная строка // base64-закодированный JSON-объект Payload
   groupOu?: string;
 
   timestamp?: string;
 
-  payload?: string;
+  payload?: Payload;
 
   isReaded: boolean;
 }
@@ -120,11 +128,21 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       data.map(async (chat: chatInfo) => {
         const newMessagesCount = await fetchNewMessagesCountByUserUid(chat.id);
 
+        let text = 'Вложение';
+        try {
+          const decoded = decodeURIComponent(atob(chat.lastMessage));
+          const parsed = JSON.parse(decoded);
+          text = parsed.text_message || 'Вложение';//Вложение, если нет текста
+        } catch (e) {
+          console.warn(`Ошибка декодирования lastMessage в чате ${chat.id}:`,chat, chat.lastMessage, e);
+        }
+
         return {
           ...chat,
           //...chat.lastMessageInfo,
           //lastMessage: decodeURIComponent(atob(chat.lastMessageInfo.lastMessage)), // Преобразуем из Base64 в строку 
-          lastMessage: decodeURIComponent(atob(chat.lastMessage)), // Преобразуем из Base64 в строку 
+          //lastMessage: decodeURIComponent(atob(chat.lastMessage)), // Преобразуем из Base64 в строку 
+          lastMessage: text,
           unread: newMessagesCount,
           time: new Date(chat.time), // Преобразуем строку времени в объект Date
           sender: chat.sender === getMyName() ? 'Вы' : chat.sender,//надеюсь имя заменить на uid(id)
@@ -290,7 +308,8 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .map((message: Message) => ({
         ...message,
         isReaded: false,
-        message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку | "new_ " + | message.num + " _new_ " +  
+        message: JSON.parse(decodeURIComponent(atob(message.message))).text_message, // Преобразуем из Base64 в строку | "new_ " + | message.num + " _new_ " +
+        payload: JSON.parse(decodeURIComponent(atob(message.message))),
       }))
       .filter((message: Message) => {//во время фильтрации сохраняем номера для непрочитанных сообщений //мои сообщения есть в old, но если они же есть в new - это значит их еще не прочитали
         const isUnique = !MessagesForChatWithContext.newMessages.some(
@@ -325,7 +344,8 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .map((message: Message) => ({
         ...message,
         isReaded: true,
-        message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку | "old_ " + | message.num + " _old_ " + 
+        message: JSON.parse(decodeURIComponent(atob(message.message))).text_message, // Преобразуем из Base64 в строку | "old_ " + | message.num + " _old_ " + 
+        payload: JSON.parse(decodeURIComponent(atob(message.message))),
       }))
       .reverse();
     }
@@ -334,6 +354,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     //  message: decodeURIComponent(atob(message.message)), // Преобразуем из Base64 в строку
     //}));
 
+    console.log(`ChatMessagesContext: \n fetchMessagesforChat: \n decodedMessages: ${decodedMessages}`);
     console.log(`ChatMessagesContext: \n fetchMessagesforChat: \n myUnreadMessageNums: ${myUnreadMessageNums}`);
     const count = await fetchNewMessagesCountByUserUid(uid);
 
@@ -441,13 +462,50 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return res.data.content; // Получаем только массив сообщений
   };
 
-  const sendMessage = async (receiverUid: string, msg: string) => {
+  const sendMessage = async (receiverUid: string, msg: string, files?: File[]) => {
     if (!user || !webSocketService.isconnected()) return;
+    
+
+    const images: string[] = [];
+    const pdf: string[] = [];
+    if(files){
+      // Преобразуем файлы в base64
+      for (const file of files) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      
+        if (file.type.startsWith('image/')) {
+          images.push(base64);
+        } else if (file.type === 'application/pdf') {
+          pdf.push(base64);
+        }
+      }
+    }
+
+    const payload = {
+      text_message: msg.trim(),
+      images,
+      pdf
+    };
+    
+    console.log('Отправка сообщения:', payload);
+    const payloadString = JSON.stringify(payload);
+
+
+
+
+
+
+
     const messageToSend = {
       receiverUid: receiverUid,
       //sender: 'ben',
       messageNumber: uuidv4(),
-      message: btoa(encodeURIComponent(msg)),//to base64 //mgs
+      message: btoa(encodeURIComponent(payloadString)),//to base64 //mgs
       //messageNumber: (chatMessages.length + 1).toString(),
       //senderUid: 'currentUser', // Здесь нужно использовать uid текущего пользователя
       //timestamp: new Date().toLocaleTimeString(), //new Date().toISOString(),
@@ -457,8 +515,9 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const messageToShow = {
       sender: getMyUid()!.toString(),
       num: messageToSend.messageNumber,
-      message: msg,
+      message: payload.text_message,
       isReaded: false,
+      payload: payload,
       //groupOu?: string;
     }
     console.log("messageToShow:\n", messageToShow);
@@ -679,7 +738,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   return (
     <ChatMessageContext.Provider value={{ 
-        messages, 
+        messages,
         MessagesForChatWithContext,
         sendMessage, 
         notifications,
