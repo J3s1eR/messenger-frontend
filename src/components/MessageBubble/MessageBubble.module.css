@@ -195,5 +195,22 @@
   color: #a4a4a400;
 }*/
 
+.downloadLink {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #1a1a1a;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.downloadLink:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
 
 

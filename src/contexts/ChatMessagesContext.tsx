@@ -468,6 +468,7 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     const images: string[] = [];
     const pdf: string[] = [];
+    const other_type_files: string[] = [];
     if(files){
       // Преобразуем файлы в base64
       for (const file of files) {
@@ -483,13 +484,18 @@ export const ChatMessageProvider: React.FC<{ children: React.ReactNode }> = ({ c
         } else if (file.type === 'application/pdf') {
           pdf.push(base64);
         }
+        else {
+          other_type_files.push(base64);
+          //console.log(`sendMessage: \n file: ${file.name} \n type: ${file.type} \n size: ${file.size} \n`);
+        }
       }
     }
 
     const payload = {
       text_message: msg.trim(),
       images,
-      pdf
+      pdf,
+      other_type_files
     };
     
     console.log('Отправка сообщения:', payload);

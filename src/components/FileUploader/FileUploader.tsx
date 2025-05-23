@@ -46,10 +46,10 @@ const FileUploader = forwardRef<FileUploaderHandle, FileUploaderProps>(({classNa
       const isAllowed = ALLOWED_TYPES.some(type => file.type.startsWith(type));
       const isSmallEnough = file.size <= MAX_FILE_SIZE_MB * 1024 * 1024;
 
-      if (!isAllowed) {
-        alert(`Файл "${file.name}" не поддерживается`);
-        continue;
-      }
+      //if (!isAllowed) {
+      //  alert(`Файл "${file.name}" не поддерживается`);
+      //  continue;
+      //}
 
       if (!isSmallEnough) {
         alert(`Файл "${file.name}" превышает ${MAX_FILE_SIZE_MB}MB`);
@@ -138,7 +138,8 @@ const FileUploader = forwardRef<FileUploaderHandle, FileUploaderProps>(({classNa
     } else if (file.type === 'application/pdf') {
       return <p className="text-xs text-gray-500">📄 PDF файл</p>;
     }
-    return <p className="text-xs text-gray-500">Неизвестный формат</p>;
+    // Для всех остальных типов файлов
+    return <p className="text-xs text-gray-500">🗎 Файл</p>;
   };
 
   return (
