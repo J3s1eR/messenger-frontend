@@ -96,58 +96,62 @@ export const MessageBubble = ({
         
       >
         <div ref={bubbleRef} className={styles.bubbleContent}>
-        {attachments?.images.map(attachment => (
-          <Squircle
-          key={attachment} className={styles.attachment}
-          topLeftCornerRadius={10}//Левый верхний
-          topRightCornerRadius={10}//Правый верхний
-          bottomLeftCornerRadius={(!isOwn && isLastInGroup) ? 10 : 10}//Левый нижний //если сообщение не моё, то острый угол слева снизу
-          bottomRightCornerRadius={(isOwn && isLastInGroup) ? 10 : 10}//Правый нижний //если сообщение моё, то острый угол справа снизу
+          {attachments?.images.map(attachment => (
+            <Squircle
+            key={attachment} className={styles.attachment}
+            topLeftCornerRadius={10}//Левый верхний
+            topRightCornerRadius={10}//Правый верхний
+            bottomLeftCornerRadius={(!isOwn && isLastInGroup) ? 10 : 10}//Левый нижний //если сообщение не моё, то острый угол слева снизу
+            bottomRightCornerRadius={(isOwn && isLastInGroup) ? 10 : 10}//Правый нижний //если сообщение моё, то острый угол справа снизу
 
-          cornerSmoothing={1}
+            cornerSmoothing={1}
 
-          style={{ 
-            minWidth: "100%",
-            minHeight: "100%",
-           }}
+            style={{ 
+              minWidth: "100%",
+              minHeight: "100%",
+             }}
 
-          //asChild
-          >
-            <img src={attachment} alt="Вложение" />
-          </Squircle>
-        ))}
-
-        {attachments?.other_type_files?.map(attachment => (
-          <Squircle
-          key={attachment} className={styles.attachment}
-          topLeftCornerRadius={10}//Левый верхний
-          topRightCornerRadius={10}//Правый верхний
-          bottomLeftCornerRadius={(!isOwn && isLastInGroup) ? 10 : 10}//Левый нижний //если сообщение не моё, то острый угол слева снизу
-          bottomRightCornerRadius={(isOwn && isLastInGroup) ? 10 : 10}//Правый нижний //если сообщение моё, то острый угол справа снизу
-
-          cornerSmoothing={1}
-
-          style={{ 
-            minWidth: "100%",
-            minHeight: "100%",
-           }}
-
-          //asChild
-          >
-            <img src={attachment} alt="Вложение" />
-            <a 
-              href={attachment} 
-              download 
-              title="Скачать"
-              className={styles.downloadLink}
+            //asChild
             >
-              🡇
-            </a>
-          </Squircle>
-        ))}
-        <div className={`${styles.text} ${isOwn ? 'text-white' : ''}`}>
-          {text}
-        </div>
+              <img src={attachment} alt="Вложение" />
+            </Squircle>
+          ))}
+
+          {attachments?.other_type_files?.map(attachment => (
+            <Squircle
+            key={attachment} className={styles.attachment}
+            topLeftCornerRadius={10}//Левый верхний
+            topRightCornerRadius={10}//Правый верхний
+            bottomLeftCornerRadius={(!isOwn && isLastInGroup) ? 10 : 10}//Левый нижний //если сообщение не моё, то острый угол слева снизу
+            bottomRightCornerRadius={(isOwn && isLastInGroup) ? 10 : 10}//Правый нижний //если сообщение моё, то острый угол справа снизу
+
+            cornerSmoothing={1}
+
+            style={{ 
+              minWidth: "100%",
+              minHeight: "100%",
+             }}
+
+            //asChild
+            >
+              <img src={attachment} alt="Вложение" />
+              <a 
+                href={attachment} 
+                download 
+                title="Скачать"
+                className={styles.downloadLink}
+              >
+                🡇
+              </a>
+            </Squircle>
+          ))}
+          {text ? (
+            <div className={`${styles.text} ${isOwn ? 'text-white' : ''}`}>
+              {text}
+            </div>
+            ) 
+            : null
+          }
         </div>
       </Squircle>
 

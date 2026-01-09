@@ -82,7 +82,9 @@ const LoginPage: React.FC = () => {
 
           asChild
         >
-          <button type="submit" className={styles.Button}>Войти</button>
+          <div className={styles.ButtonWrapper}>
+            <button type="submit" className={styles.Button}>Войти</button>
+          </div>
         </Squircle>
       </form>
       </div>

@@ -115,12 +115,17 @@
   box-shadow: 1px 6px 16px rgba(0, 0, 0, 0.1);
 }
 
+.bubbleContent{/*расстояние между элементами в сообщении*/
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 
 .attachment {
   margin-top: -8px;
   margin-right: -8px;
-  margin-bottom: 0px;
+  margin-bottom: -8px;
   margin-left: -8px;
   /*border-radius: 12px;*/
   overflow: hidden;
