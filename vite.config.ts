@@ -9,6 +9,10 @@ const __dirname = path.dirname(__filename);
 
 // https://vite.dev/config/
 export default defineConfig({
+  server:{
+    host: true,
+    allowedHosts:["messenger.example.ru", "localhost"],
+  },
   plugins: [react(), svgr({ 
     include: '**/*.svg',
     svgrOptions: {
